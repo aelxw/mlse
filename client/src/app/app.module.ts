@@ -1,0 +1,26 @@
+import { BrowserModule } from '@angular/platform-browser';
+import { NgModule } from '@angular/core';
+
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { MaterialModule } from './material/material.module';
+import { AgGridModule } from 'ag-grid-angular';
+import { FlexLayoutModule } from '@angular/flex-layout';
+
+import { AppComponent } from './app.component';
+
+@NgModule({
+  declarations: [
+    AppComponent
+  ],
+  imports: [
+    BrowserModule,
+    BrowserAnimationsModule,
+    MaterialModule,
+    AgGridModule.withComponents([]),
+    FlexLayoutModule
+  ],
+  providers: [],
+  entryComponents: [],
+  bootstrap: [AppComponent]
+})
+export class AppModule { }
