@@ -6,12 +6,15 @@ import { MaterialModule } from './material/material.module';
 import { AgGridModule } from 'ag-grid-angular';
 import { FlexLayoutModule } from '@angular/flex-layout';
 
-import {AppRoutes} from './app.routes';
+import { AppRoutes } from './app.routes';
 
 import { AppComponent } from './app.component';
 import { IndexComponent } from './index/index.component';
 import { RankingComponent } from './ranking/ranking.component';
 import { GridImageComponent } from './gridElements/grid-image/grid-image.component';
+
+import { RestService } from './providers/rest.service';
+import { HttpModule } from '@angular/http';
 
 @NgModule({
   declarations: [
@@ -26,9 +29,12 @@ import { GridImageComponent } from './gridElements/grid-image/grid-image.compone
     MaterialModule,
     AgGridModule.withComponents([]),
     FlexLayoutModule,
-    AppRoutes
+    AppRoutes,
+    HttpModule
   ],
-  providers: [],
+  providers: [
+    RestService
+  ],
   entryComponents: [
     GridImageComponent
   ],
