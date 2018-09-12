@@ -6,21 +6,32 @@ import { MaterialModule } from './material/material.module';
 import { AgGridModule } from 'ag-grid-angular';
 import { FlexLayoutModule } from '@angular/flex-layout';
 
+import {AppRoutes} from './app.routes';
+
 import { AppComponent } from './app.component';
+import { IndexComponent } from './index/index.component';
+import { RankingComponent } from './ranking/ranking.component';
+import { GridImageComponent } from './gridElements/grid-image/grid-image.component';
 
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
+    IndexComponent,
+    RankingComponent,
+    GridImageComponent
   ],
   imports: [
     BrowserModule,
     BrowserAnimationsModule,
     MaterialModule,
     AgGridModule.withComponents([]),
-    FlexLayoutModule
+    FlexLayoutModule,
+    AppRoutes
   ],
   providers: [],
-  entryComponents: [],
+  entryComponents: [
+    GridImageComponent
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
