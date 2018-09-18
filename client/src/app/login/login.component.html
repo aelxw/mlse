@@ -16,7 +16,7 @@
           <input matInput [type]="'password'" [(ngModel)]="password">
         </mat-form-field>
         <div *ngIf="failLogin">
-          <strong style="color: red">Incorrect credentials!</strong>
+          <strong style="color: red">{{failMessage}}</strong>
         </div>
         <button mat-stroked-button style="width: 90%; color: #808080; margin-top: 1rem;" (click)="login()">
           Login

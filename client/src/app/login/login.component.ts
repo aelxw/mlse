@@ -1,6 +1,6 @@
-import { Component} from '@angular/core';
+import { Component } from '@angular/core';
 
-import {Router} from '@angular/router';
+import { Router } from '@angular/router';
 import { RestService } from '../providers/rest.service';
 import { Response } from '@angular/http';
 import { UserService } from '../providers/user.service';
@@ -15,6 +15,7 @@ export class LoginComponent {
   email: string = "";
   password: string = "";
   failLogin: boolean = false;
+  failMessage: string = "";
 
   constructor(
     public router: Router,
@@ -24,6 +25,7 @@ export class LoginComponent {
 
   login() {
     this.failLogin = false;
+
     this.restService.login(this.email, this.password).then(
       (value: Response) => {
         let success = value.json();
@@ -32,10 +34,15 @@ export class LoginComponent {
           this.router.navigate(["home"]);
         }
         else {
-          this.failLogin = true;
+          this.fail("Incorrect credentials");
         }
       }
     );
+  }
+
+  fail(msg: string) {
+    this.failLogin = true;
+    this.failMessage = msg;
   }
 
 }
