@@ -1,0 +1,27 @@
+<div fxLayout="row" fxLayoutAlign="center">
+  <mat-card style="width: 20rem; max-height: 20rem; position: absolute; margin: 12rem 0;">
+    <mat-card-title>
+      <div fxLayout="row" fxLayoutAlign="center">
+        <img style="width: 11rem; height: 5rem;" src="https://mlse.com/wp-content/uploads/2014/12/MLSE_logo_col_160.png">
+      </div>
+    </mat-card-title>
+    <mat-card-content>
+      <div fxLayout="column" fxLayoutAlign="center center">
+        <mat-form-field appearance="standard" style="width: 90%;">
+          <mat-label>Email</mat-label>
+          <input matInput [(ngModel)]="email">
+        </mat-form-field>
+        <mat-form-field appearance="standard" style="width: 90%;">
+          <mat-label>Password</mat-label>
+          <input matInput [type]="'password'" [(ngModel)]="password">
+        </mat-form-field>
+        <div *ngIf="failLogin">
+          <strong style="color: red">Incorrect credentials!</strong>
+        </div>
+        <button mat-stroked-button style="width: 90%; color: #808080; margin-top: 1rem;" (click)="login()">
+          Login
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

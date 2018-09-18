@@ -1,16 +1,18 @@
 import { Routes, RouterModule } from '@angular/router';
 
-import {IndexComponent} from './index/index.component';
-import {RankingComponent} from './ranking/ranking.component';
+import {LoginComponent} from './login/login.component';
+import {HomeComponent} from './home/home.component';
+import { AuthGuardService as authGuardService } from './providers/auth-guard.service';
 
 const appRoutes: Routes = [
   {
     path: '',
-    component: IndexComponent
+    component: LoginComponent
   },
   {
-    path: 'ranking',
-    component: RankingComponent
+    path: 'home',
+    component: HomeComponent,
+    canActivate: [authGuardService]
   },
 ];
 
