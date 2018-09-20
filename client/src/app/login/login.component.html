@@ -1,11 +1,10 @@
 <div fxLayout="row" fxLayoutAlign="center">
-  <mat-card style="width: 20rem; max-height: 20rem; position: absolute; margin: 12rem 0;">
-    <mat-card-title>
-      <div fxLayout="row" fxLayoutAlign="center">
-        <img style="width: 11rem; height: 5rem;" src="https://mlse.com/wp-content/uploads/2014/12/MLSE_logo_col_160.png">
+  <div class="login-panel">
+
+    <div style="padding: 5px; border: 1px solid lightgray; border-radius: 5px">
+      <div fxLayoutAlign="center">
+        <img style="width: 15rem; height: 7rem; padding: 1rem 0 2rem 0;" src="https://mlse.com/wp-content/uploads/2014/12/MLSE_logo_col_160.png">
       </div>
-    </mat-card-title>
-    <mat-card-content>
       <div fxLayout="column" fxLayoutAlign="center center">
         <mat-form-field appearance="standard" style="width: 90%;">
           <mat-label>Email</mat-label>
@@ -18,10 +17,12 @@
         <div *ngIf="failLogin">
           <strong style="color: red">{{failMessage}}</strong>
         </div>
-        <button mat-stroked-button style="width: 90%; color: #808080; margin-top: 1rem;" (click)="login()">
+        <button mat-button style="width: 90%; margin: 1rem 0; background-color: rgba(0,0,0,0.1)" (click)="login()">
           Login
         </button>
       </div>
-    </mat-card-content>
-  </mat-card>
+    </div>
+
+
+  </div>
 </div>

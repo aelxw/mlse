@@ -1,0 +1,35 @@
+#sidebar {
+    background-color: rgba(0, 0, 0, 0.2);
+    position: fixed;
+    height: 100%;
+    width: 10rem;
+    top: 0;
+    left: 0;
+}
+
+#sidebar .item {
+    padding: 10px 10px;
+    font-size: 14px;
+    font-family: 'Arial';
+    color: white;
+    cursor: pointer;
+    height: 3rem;
+    position: relative;
+}
+
+#sidebar .current {
+    width: 2px;
+    height: inherit;
+    position: absolute;
+    right:0px;
+    top:0px;
+    background-color: #209e91;
+}
+
+#sidebar .item span {
+    padding: 0 1rem 0;
+}
+
+#sidebar .item:hover {
+    background-color: rgba(0, 0, 0, 0.5);
+}

@@ -3,11 +3,11 @@ import { Router } from '@angular/router';
 import { UserService } from '../providers/user.service';
 
 @Component({
-  selector: 'app-home',
-  templateUrl: './home.component.html',
-  styleUrls: ['./home.component.css']
+  selector: 'app-sidebar',
+  templateUrl: './sidebar.component.html',
+  styleUrls: ['./sidebar.component.css']
 })
-export class HomeComponent implements OnInit {
+export class SidebarComponent implements OnInit {
 
   constructor(
     public router: Router,
@@ -17,7 +17,7 @@ export class HomeComponent implements OnInit {
   ngOnInit() {
   }
 
-  logout(){
+  logout() {
     this.userService.logout();
   }
 
