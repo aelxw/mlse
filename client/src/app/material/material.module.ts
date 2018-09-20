@@ -22,7 +22,8 @@ import {
   MatCheckboxModule,
   MatDatepickerModule,
   MatProgressBarModule,
-  MatAutocompleteModule
+  MatAutocompleteModule,
+  MatTabsModule
 } from '@angular/material';
 
 @NgModule({
@@ -49,7 +50,8 @@ import {
     MatCheckboxModule,
     MatDatepickerModule,
     MatProgressBarModule,
-    MatAutocompleteModule
+    MatAutocompleteModule,
+    MatTabsModule
   ],
   exports: [
     MatMenuModule,
@@ -74,7 +76,8 @@ import {
     MatCheckboxModule,
     MatDatepickerModule,
     MatProgressBarModule,
-    MatAutocompleteModule
+    MatAutocompleteModule,
+    MatTabsModule
   ]
 })
 export class MaterialModule { }

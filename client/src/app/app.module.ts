@@ -17,6 +17,7 @@ import { LoginComponent } from './login/login.component';
 import { RestService } from './providers/rest.service';
 import { HttpModule } from '@angular/http';
 import { HomeComponent } from './home/home.component';
+import { SidebarComponent } from './sidebar/sidebar.component';
 
 
 @NgModule({
@@ -25,7 +26,8 @@ import { HomeComponent } from './home/home.component';
     RankingComponent,
     GridImageComponent,
     LoginComponent,
-    HomeComponent
+    HomeComponent,
+    SidebarComponent
   ],
   imports: [
     BrowserModule,
