@@ -1,0 +1,8 @@
+@import '~@angular/material/prebuilt-themes/indigo-pink.css';
+@import '~ag-grid/dist/styles/ag-grid.css';
+@import '~ag-grid/dist/styles/ag-theme-balham.css';
+@import 'ag-grid/dist/styles/ag-theme-material.css';
+
+.clickable {
+    cursor: pointer;
+}
