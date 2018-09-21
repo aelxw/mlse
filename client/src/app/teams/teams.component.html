@@ -1,0 +1,21 @@
+<app-sidebar></app-sidebar>
+
+<div class="container">
+
+  <div class="panel-light">
+
+    <mat-form-field>
+      <input matInput  [matAutocomplete]="home">
+    </mat-form-field>
+    <mat-autocomplete #home="matAutocomplete" autoActiveFirstOption>
+      <mat-option *ngFor="let t of teamsService.nhlTeams" [value]="t">
+        {{t.team}}
+      </mat-option>
+    </mat-autocomplete>
+
+    <ag-grid-angular [gridOptions]="teamsService.nhlGO" class="ag-theme-material" style="height: 30rem; width: 30rem; margin-bottom: 1rem">
+    </ag-grid-angular>
+
+  </div>
+
+</div>

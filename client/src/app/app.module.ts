@@ -15,9 +15,15 @@ import { GridImageComponent } from './gridElements/grid-image/grid-image.compone
 import { LoginComponent } from './login/login.component';
 
 import { RestService } from './providers/rest.service';
+import { AuthGuardService } from './providers/auth-guard.service';
+import { UserService } from './providers/user.service';
+import { TeamsService } from './providers/teams.service';
+import { GamesService } from './providers/games.service';
+
 import { HttpModule } from '@angular/http';
 import { HomeComponent } from './home/home.component';
 import { SidebarComponent } from './sidebar/sidebar.component';
+import { TeamsComponent } from './teams/teams.component';
 
 
 @NgModule({
@@ -27,7 +33,8 @@ import { SidebarComponent } from './sidebar/sidebar.component';
     GridImageComponent,
     LoginComponent,
     HomeComponent,
-    SidebarComponent
+    SidebarComponent,
+    TeamsComponent
   ],
   imports: [
     BrowserModule,
@@ -40,7 +47,10 @@ import { SidebarComponent } from './sidebar/sidebar.component';
     HttpModule
   ],
   providers: [
-    RestService
+    RestService,
+    AuthGuardService,
+    UserService,
+    TeamsService
   ],
   entryComponents: [
     GridImageComponent

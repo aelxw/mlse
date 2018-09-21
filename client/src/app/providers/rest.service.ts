@@ -32,6 +32,10 @@ export class RestService {
     return this.get("/tickets");
   }
 
+  getNHLTeams(){
+    return this.get("/nhl-teams");
+  }
+
   login(email: string, password: string) {
     let data = {
       email: email,

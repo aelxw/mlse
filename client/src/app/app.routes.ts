@@ -4,6 +4,7 @@ import {LoginComponent} from './login/login.component';
 import {HomeComponent} from './home/home.component';
 import { AuthGuardService as authGuardService } from './providers/auth-guard.service';
 import { RankingComponent } from './ranking/ranking.component';
+import { TeamsComponent } from './teams/teams.component';
 
 const appRoutes: Routes = [
   {
@@ -18,6 +19,11 @@ const appRoutes: Routes = [
   {
     path: 'ranking',
     component: RankingComponent,
+    canActivate: [authGuardService]
+  },
+  {
+    path: 'teams',
+    component: TeamsComponent,
     canActivate: [authGuardService]
   }
 ];

@@ -12,6 +12,12 @@
     <div [ngClass]="{'current': router.url == '/ranking'}"></div>
   </div>
 
+  <div class="item" fxLayout="row" fxLayoutAlign=" center" (click)="router.navigate(['teams'])">
+    <mat-icon>group</mat-icon>
+    <span>Games</span>
+    <div [ngClass]="{'current': router.url == '/teams'}"></div>
+  </div>
+
   <div class="item" fxLayout="row" fxLayoutAlign=" center" (click)="logout()">
     <mat-icon>exit_to_app</mat-icon>
     <span>Logout</span>

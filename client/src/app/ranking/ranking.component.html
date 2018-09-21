@@ -1,1 +1,21 @@
 <app-sidebar></app-sidebar>
+
+
+<div class="container">
+
+
+    <div class="panel-light">
+        <ag-grid-angular [gridOptions]="userService.rankingGO" class="ag-theme-material" style="height: 30rem; width: 30rem; margin-bottom: 1rem">
+        </ag-grid-angular>
+
+
+        <div fxLayout="row" fxLayoutAlign="center">
+            <button mat-button style="width: 80%; margin: auto; background-color: rgba(0,0,0,0.1)" (click)="userService.setViewData()">
+                Confirm
+            </button>
+        </div>
+
+    </div>
+
+
+</div>

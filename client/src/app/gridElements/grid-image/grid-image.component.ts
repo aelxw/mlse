@@ -10,8 +10,10 @@ export class GridImageComponent {
   constructor() { }
 
   o: any;
+  field: string;
   agInit(params){
     this.o = params.data;
+    this.field = params.field;
   }
 
 }
