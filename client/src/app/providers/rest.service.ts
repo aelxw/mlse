@@ -6,7 +6,7 @@ import { Http, RequestOptionsArgs, Headers } from '@angular/http';
 })
 export class RestService {
 
-  server: string = "http://192.168.1.6:2000";
+  server: string = "http://localhost:2000";
 
   constructor(
     public http: Http
