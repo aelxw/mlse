@@ -24,6 +24,9 @@ import { HttpModule } from '@angular/http';
 import { HomeComponent } from './home/home.component';
 import { SidebarComponent } from './sidebar/sidebar.component';
 import { TeamsComponent } from './teams/teams.component';
+import { FilterPipe } from './pipes/filter.pipe';
+import { AddNhlComponent } from './bottomSheet/add-nhl/add-nhl.component';
+import { SidebarService } from './providers/sidebar.service';
 
 
 @NgModule({
@@ -34,12 +37,14 @@ import { TeamsComponent } from './teams/teams.component';
     LoginComponent,
     HomeComponent,
     SidebarComponent,
-    TeamsComponent
+    TeamsComponent,
+    FilterPipe,
+    AddNhlComponent
   ],
   imports: [
     BrowserModule,
-    FormsModule,
     BrowserAnimationsModule,
+    FormsModule,
     MaterialModule,
     AgGridModule.withComponents([]),
     FlexLayoutModule,
@@ -50,10 +55,13 @@ import { TeamsComponent } from './teams/teams.component';
     RestService,
     AuthGuardService,
     UserService,
-    TeamsService
+    TeamsService,
+    GamesService,
+    SidebarService
   ],
   entryComponents: [
-    GridImageComponent
+    GridImageComponent,
+    AddNhlComponent
   ],
   bootstrap: [AppComponent]
 })

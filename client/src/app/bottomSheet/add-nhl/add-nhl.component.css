@@ -1,0 +1,42 @@
+.receipt-aside{
+    margin: auto;
+    padding: 5px 0;
+    max-width: 360px;
+}
+
+.receipt-details{
+    background: #ffffff;
+    border: solid 1px lightgray;
+    color: #3a3944;
+    padding: 0 20px 20px;
+    position: relative;
+}
+
+.receipt-item{
+    padding-top: 20px;
+}
+
+.receipt-item.bottom-divider{
+    border-bottom: 1px solid lightgray;
+    padding-bottom: 20px;
+}
+
+.receipt-item .receipt-info{
+    margin-bottom: 0;
+}
+
+.receipt-item .receipt-info + .receipt-info{
+    margin-top: 5px;
+}
+
+.pull-right{
+    float: right!important;
+}
+
+p{
+    margin: 0 0 10px;
+}
+
+.close:hover{
+    color:lightgrey
+}

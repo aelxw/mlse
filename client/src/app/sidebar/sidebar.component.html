@@ -1,26 +1,28 @@
-<div id="sidebar">
+<mat-toolbar style="position: fixed; top:0; left:0; width: 10rem; height: 100%;">
 
-  <div class="item" fxLayout="row" fxLayoutAlign=" center" (click)="router.navigate(['home'])">
-    <mat-icon>home</mat-icon>
-    <span>Home</span>
-    <div [ngClass]="{'current': router.url == '/home'}"></div>
+  <div fxLayout="column" fxLayoutGap="1rem">
+    <div fxLayout="row" fxLayoutAlign=" center" (click)="router.navigate(['home'])">
+      <mat-icon>home</mat-icon>
+      <span>Home</span>
+    </div>
+
+    <div fxLayout="row" fxLayoutAlign=" center" (click)="router.navigate(['home/ranking'])">
+      <mat-icon>format_list_numbered</mat-icon>
+      <span>Rankings</span>
+    </div>
+
+
+    <div fxLayout="row" fxLayoutAlign=" center" (click)="router.navigate(['home/teams'])">
+      <mat-icon>group</mat-icon>
+      <span>Games</span>
+    </div>
+
+    <div fxLayout="row" fxLayoutAlign=" center" (click)="logout()">
+      <mat-icon>exit_to_app</mat-icon>
+      <span>Logout</span>
+    </div>
   </div>
 
-  <div class="item" fxLayout="row" fxLayoutAlign=" center" (click)="router.navigate(['ranking'])">
-    <mat-icon>format_list_numbered</mat-icon>
-    <span>Rankings</span>
-    <div [ngClass]="{'current': router.url == '/ranking'}"></div>
-  </div>
 
-  <div class="item" fxLayout="row" fxLayoutAlign=" center" (click)="router.navigate(['teams'])">
-    <mat-icon>group</mat-icon>
-    <span>Games</span>
-    <div [ngClass]="{'current': router.url == '/teams'}"></div>
-  </div>
 
-  <div class="item" fxLayout="row" fxLayoutAlign=" center" (click)="logout()">
-    <mat-icon>exit_to_app</mat-icon>
-    <span>Logout</span>
-  </div>
-
-</div>
+</mat-toolbar>

@@ -1,0 +1,77 @@
+<div class="receipt-aside">
+  <div class="receipt-details">
+
+    <div style="position:absolute; top:5px; right: 5px;">
+      <mat-icon class="close clickable" (click)="close()">close</mat-icon>
+    </div>
+
+    <div class="receipt-item bottom-divider">
+      <p class="receipt-info">
+        <strong class="" style="color: rgba(38,45,59,1);font-size: 15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;">
+          {{t.description}}
+        </strong>
+      </p>
+      <p class="receipt-info">
+        <span class="" style="color: rgba(124,126,145,1);font-size: 13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;">
+          {{t.detail}}
+        </span>
+      </p>
+      <p class="receipt-info">
+        <span class="" style="color: rgba(124,126,145,1);font-size: 13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;">
+          {{t.displayName}}
+        </span>
+      </p>
+      <p class="receipt-info">
+        <span class="" style="color: rgba(124,126,145,1);font-size: 13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;">
+          {{t.time | date : 'short'}}
+        </span>
+      </p>
+    </div>
+
+    <div *ngIf="!t.isDeposit">
+      <div class="receipt-item bottom-divider">
+        <mat-form-field appearance="outline">
+          <mat-label>Amount</mat-label>
+          <input matInput [(ngModel)]="t.price">
+        </mat-form-field>
+        <p style="margin: 0px 0px">
+          <span class="pull-right" style="color: rgba(124,126,145,1);font-size: 13px;">
+            {{calcTax() | currency}}
+          </span>
+          <span style="color: rgba(124,126,145,1);font-size: 13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;">
+            Tax
+          </span>
+        </p>
+      </div>
+      <div class="receipt-item bottom-divider" style="padding-bottom: 0px">
+        <mat-form-field appearance="outline">
+          <mat-label>Fixed Cost</mat-label>
+          <input matInput [(ngModel)]="fixed">
+        </mat-form-field>
+      </div>
+    </div>
+
+    <div *ngIf="t.isDeposit">
+      <div class="receipt-item bottom-divider" style="padding-bottom: 0px">
+        <mat-form-field appearance="outline">
+          <mat-label>Amount</mat-label>
+          <input matInput [(ngModel)]="t.price">
+        </mat-form-field>
+      </div>
+    </div>
+
+    <div class="receipt-item">
+      <span class="pull-right " style="color: rgba(38,45,59,1);font-size: 17px;">
+        {{calcTotal() | currency}}
+      </span>
+      <span class="" style="color: rgba(38,45,59,1);font-size: 17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;">
+        Total
+      </span>
+    </div>
+    <div class="receipt-item">
+      <button [disabled]="!(calcTotal() > 0)" mat-raised-button color="warn" style="width:100%" (click)="confirmTotal()">
+        <span style="color:#ffffff;font-size:13px;">Confirm</span>
+      </button>
+    </div>
+  </div>
+</div>

@@ -25,7 +25,7 @@ export class TeamsService {
         this.nhlGO.columnApi = params.columnApi;
         this.nhlGO.rowData = this.nhlTeams;
         this.nhlGO.api.setRowData(this.nhlTeams);
-        this.nhlGO.api.sizeColumnsToFit();
+        this.nhlGO.columnApi.autoSizeAllColumns();
 
       },
       suppressMovableColumns: true,
@@ -33,8 +33,10 @@ export class TeamsService {
       rowHeight: 50,
       columnDefs: [
         {
-          headerName: "Team",
-          field: "team"
+          headerName: "Date"
+        },
+        {
+          headerName: "Playing"
         },
         {
           headerName: "Logo",
