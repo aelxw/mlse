@@ -1,9 +1,10 @@
 import { Component, Input, OnInit } from '@angular/core';
 
 import { NbMenuService, NbSidebarService } from '@nebular/theme';
-import { UserService } from '../../../@core/data/users.service';
 import { AnalyticsService } from '../../../@core/utils/analytics.service';
 import { LayoutService } from '../../../@core/data/layout.service';
+import { NbAuthService, NbAuthJWTToken, NbTokenService } from '@nebular/auth';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'ngx-header',
@@ -16,18 +17,25 @@ export class HeaderComponent implements OnInit {
 
   user: any;
 
-  userMenu = [{ title: 'Profile' }, { title: 'Log out' }];
+  constructor(
+    private sidebarService: NbSidebarService,
+    private menuService: NbMenuService,
+    private analyticsService: AnalyticsService,
+    private layoutService: LayoutService,
+    private authService: NbAuthService,
+    private router: Router,
+    private tokenService: NbTokenService
+  ) {
 
-  constructor(private sidebarService: NbSidebarService,
-              private menuService: NbMenuService,
-              private userService: UserService,
-              private analyticsService: AnalyticsService,
-              private layoutService: LayoutService) {
+    this.authService.onTokenChange().subscribe((token: NbAuthJWTToken) => {
+      if(token.isValid()){
+        this.user = token.getPayload();
+      }
+    });
+
   }
 
   ngOnInit() {
-    this.userService.getUsers()
-      .subscribe((users: any) => this.user = users.nick);
   }
 
   toggleSidebar(): boolean {
@@ -38,9 +46,14 @@ export class HeaderComponent implements OnInit {
   }
 
   toggleSettings(): boolean {
-    this.sidebarService.toggle(false, 'settings-sidebar');
+    this.sidebarService.toggle(false, 'admin-sidebar');
 
     return false;
+  }
+
+  logout() {
+    this.tokenService.clear();
+    this.router.navigate(['/auth/login']);
   }
 
   goToHome() {

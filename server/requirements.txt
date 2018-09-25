@@ -86,6 +86,7 @@ pycparser==2.18
 PyDispatcher==2.0.5
 Pygments==2.2.0
 PyInstaller==3.3.1
+PyJWT==1.6.4
 pyodbc==4.0.18
 Pyomo==5.4.3
 pyOpenSSL==17.3.0

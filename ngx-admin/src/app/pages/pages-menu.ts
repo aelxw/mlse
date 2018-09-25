@@ -2,28 +2,29 @@ import { NbMenuItem } from '@nebular/theme';
 
 export const MENU_ITEMS: NbMenuItem[] = [
   {
-    title: 'FEATURES',
-    group: true
+    title: 'Home',
+    icon: 'nb-home',
+    link: '/pages/home',
+    home: true,
   },
   {
-    title: 'Ranking',
+    title: 'Rankings',
     icon: 'nb-compose',
     link: '/pages/ranking'
   },
   {
-    title: 'E-commerce',
+    title: 'Features',
+    group: true,
+  },
+  {
+    title: 'E-Commerce',
     icon: 'nb-e-commerce',
-    link: '/pages/dashboard',
-    home: true,
+    link: '/pages/dashboard'
   },
   {
     title: 'IoT Dashboard',
     icon: 'nb-home',
     link: '/pages/iot-dashboard',
-  },
-  {
-    title: 'ACCOUNT',
-    group: true,
   },
   {
     title: 'Auth',

@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 from bs4 import BeautifulSoup
 import requests
+import jwt
 
 
 # In[2]:
@@ -59,8 +60,17 @@ def getNHLTeams():
 @app.route("/login", methods=["POST"])
 def authenticate():
     req_data = request.json
-    if(req_data["email"] == "a" and req_data["password"] == "b"):
-        return json.dumps(True)
+    print(req_data)
+    
+    payload = {
+        "email":req_data["email"],
+        "role":"admin",
+        "name":"Alexander Walmsley"
+    }
+    encoded = jwt.encode(payload, 'secret', algorithm='HS256').decode("utf-8")
+    
+    if(True):
+        return json.dumps({"token":encoded})
     else:
         return json.dumps(False)
 

@@ -7,6 +7,7 @@ import { PagesRoutingModule } from './pages-routing.module';
 import { ThemeModule } from '../@theme/theme.module';
 import { MiscellaneousModule } from './miscellaneous/miscellaneous.module';
 import { RankingModule } from './ranking/ranking.module';
+import { HomeModule } from './home/home.module';
 
 const PAGES_COMPONENTS = [
   PagesComponent,
@@ -19,7 +20,8 @@ const PAGES_COMPONENTS = [
     DashboardModule,
     ECommerceModule,
     MiscellaneousModule,
-    RankingModule
+    RankingModule,
+    HomeModule
   ],
   declarations: [
     ...PAGES_COMPONENTS

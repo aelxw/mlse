@@ -18,6 +18,9 @@ import {
   NbPopoverModule,
   NbContextMenuModule,
   NbProgressBarModule,
+  NbAlertModule,
+  NbInputModule,
+  NbButtonModule
 } from '@nebular/theme';
 
 import { NbSecurityModule } from '@nebular/security';
@@ -32,6 +35,9 @@ import {
   ThemeSwitcherComponent,
   TinyMCEComponent,
   ThemeSwitcherListComponent,
+  NgxLoginComponent,
+  NgxAuthBlockComponent,
+  NgxRegisterComponent
 } from './components';
 import {
   CapitalizePipe,
@@ -49,6 +55,7 @@ import {
 import { DEFAULT_THEME } from './styles/theme.default';
 import { COSMIC_THEME } from './styles/theme.cosmic';
 import { CORPORATE_THEME } from './styles/theme.corporate';
+import { RouterModule } from '@angular/router';
 
 const BASE_MODULES = [CommonModule, FormsModule, ReactiveFormsModule];
 
@@ -68,6 +75,10 @@ const NB_MODULES = [
   NgbModule,
   NbSecurityModule, // *nbIsGranted directive,
   NbProgressBarModule,
+  NbAlertModule,
+  NbInputModule,
+  RouterModule,
+  NbButtonModule
 ];
 
 const COMPONENTS = [
@@ -83,7 +94,10 @@ const COMPONENTS = [
   OneColumnLayoutComponent,
   SampleLayoutComponent,
   ThreeColumnsLayoutComponent,
-  TwoColumnsLayoutComponent
+  TwoColumnsLayoutComponent,
+  NgxLoginComponent,
+  NgxAuthBlockComponent,
+  NgxRegisterComponent
 ];
 
 const ENTRY_COMPONENTS = [

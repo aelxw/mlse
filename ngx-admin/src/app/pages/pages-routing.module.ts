@@ -6,11 +6,16 @@ import { DashboardComponent } from './dashboard/dashboard.component';
 import { ECommerceComponent } from './e-commerce/e-commerce.component';
 import { NotFoundComponent } from './miscellaneous/not-found/not-found.component';
 import { RankingComponent } from './ranking/ranking.component';
+import { HomeComponent } from './home/home.component';
 
 const routes: Routes = [{
   path: '',
   component: PagesComponent,
   children: [
+    {
+      path: 'home',
+      component: HomeComponent
+    },
     {
       path: 'ranking',
       component: RankingComponent
