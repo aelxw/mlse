@@ -52,7 +52,6 @@ export class TeamsService {
 
 
   loadNHLTeams() {
-    console.log("hi");
     this.restService.getNHLTeams().then((value: Response) => {
       this.nhlTeams = value.json();
     });

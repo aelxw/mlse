@@ -1,32 +1,20 @@
 
-import { of as observableOf,  Observable } from 'rxjs';
 import { Injectable } from '@angular/core';
-
-
-let counter = 0;
+import { RestService } from './REST.service';
 
 @Injectable()
 export class UserService {
 
-  private users = {
-  };
+  public users: Array<any> = [];
 
-  private userArray: any[];
+  constructor(
+    public restService: RestService
+  ) {
 
-  constructor() {
-    // this.userArray = Object.values(this.users);
   }
 
-  getUsers(): Observable<any> {
-    return observableOf(this.users);
+  getUsers(){
+    return this.restService.getAllUsers();
   }
 
-  getUserArray(): Observable<any[]> {
-    return observableOf(this.userArray);
-  }
-
-  getUser(): Observable<any> {
-    counter = (counter + 1) % this.userArray.length;
-    return observableOf(this.userArray[counter]);
-  }
 }

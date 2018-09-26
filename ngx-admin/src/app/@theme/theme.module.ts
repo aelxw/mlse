@@ -20,7 +20,8 @@ import {
   NbProgressBarModule,
   NbAlertModule,
   NbInputModule,
-  NbButtonModule
+  NbButtonModule,
+  NbSpinnerModule
 } from '@nebular/theme';
 
 import { NbSecurityModule } from '@nebular/security';
@@ -78,7 +79,8 @@ const NB_MODULES = [
   NbAlertModule,
   NbInputModule,
   RouterModule,
-  NbButtonModule
+  NbButtonModule,
+  NbSpinnerModule
 ];
 
 const COMPONENTS = [

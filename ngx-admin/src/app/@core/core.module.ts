@@ -8,6 +8,7 @@ import { throwIfAlreadyLoaded } from './module-import-guard';
 import { DataModule } from './data/data.module';
 import { AnalyticsService } from './utils/analytics.service';
 import { RoleProvider } from './data/role-provider.service';
+import { HttpModule } from '@angular/http';
 
 const socialLinks = [
   {
@@ -46,7 +47,13 @@ export const NB_CORE_PROVIDERS = [
           redirect: {
             success: '/pages/home'
           }
-        }
+        },
+        register: {
+          endpoint: '/user-create',
+          redirect: {
+            success: '/pages/home'
+          }
+        },
 
       }),
     ],
@@ -81,9 +88,11 @@ export const NB_CORE_PROVIDERS = [
 @NgModule({
   imports: [
     CommonModule,
+    HttpModule
   ],
   exports: [
     NbAuthModule,
+    HttpModule
   ],
   declarations: [],
 })

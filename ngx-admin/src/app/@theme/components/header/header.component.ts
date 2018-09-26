@@ -5,6 +5,7 @@ import { AnalyticsService } from '../../../@core/utils/analytics.service';
 import { LayoutService } from '../../../@core/data/layout.service';
 import { NbAuthService, NbAuthJWTToken, NbTokenService } from '@nebular/auth';
 import { Router } from '@angular/router';
+import { UserService } from '../../../@core/data/users.service';
 
 @Component({
   selector: 'ngx-header',
@@ -24,7 +25,8 @@ export class HeaderComponent implements OnInit {
     private layoutService: LayoutService,
     private authService: NbAuthService,
     private router: Router,
-    private tokenService: NbTokenService
+    private tokenService: NbTokenService,
+    private userService: UserService
   ) {
 
     this.authService.onTokenChange().subscribe((token: NbAuthJWTToken) => {

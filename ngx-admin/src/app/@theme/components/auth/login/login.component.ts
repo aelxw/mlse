@@ -30,11 +30,11 @@ export class NgxLoginComponent {
   rememberMe = false;
 
   constructor(protected service: NbAuthService,
-              @Inject(NB_AUTH_OPTIONS) protected options = {},
-              protected cd: ChangeDetectorRef,
-              protected router: Router) {
+    @Inject(NB_AUTH_OPTIONS) protected options = {},
+    protected cd: ChangeDetectorRef,
+    protected router: Router) {
 
-    this.redirectDelay = 0;
+    this.redirectDelay = this.getConfigValue('forms.login.redirectDelay');
     this.showMessages = this.getConfigValue('forms.login.showMessages');
     this.strategy = this.getConfigValue('forms.login.strategy');
     this.socialLinks = this.getConfigValue('forms.login.socialLinks');
@@ -45,7 +45,7 @@ export class NgxLoginComponent {
     this.errors = this.messages = [];
     this.submitted = true;
 
-    
+
     this.service.authenticate(this.strategy, this.user).subscribe((result: NbAuthResult) => {
       this.submitted = false;
 
@@ -57,11 +57,14 @@ export class NgxLoginComponent {
 
       const redirect = result.getRedirect();
       if (redirect) {
-        return this.router.navigateByUrl(redirect);
+        setTimeout(() => {
+          return this.router.navigateByUrl(redirect);
+        }, this.redirectDelay);
       }
+
       this.cd.detectChanges();
     });
-    
+
   }
 
   getConfigValue(key: string): any {

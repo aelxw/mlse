@@ -7,6 +7,7 @@ import { ECommerceComponent } from './e-commerce/e-commerce.component';
 import { NotFoundComponent } from './miscellaneous/not-found/not-found.component';
 import { RankingComponent } from './ranking/ranking.component';
 import { HomeComponent } from './home/home.component';
+import { AdminComponent } from './admin/admin.component';
 
 const routes: Routes = [{
   path: '',
@@ -19,6 +20,10 @@ const routes: Routes = [{
     {
       path: 'ranking',
       component: RankingComponent
+    },
+    {
+      path: 'admin',
+      component: AdminComponent
     },
     {
       path: 'dashboard',

@@ -16,6 +16,7 @@ import { OrdersProfitChartService } from './orders-profit-chart.service';
 import { TrafficBarService } from './traffic-bar.service';
 import { ProfitBarAnimationChartService } from './profit-bar-animation-chart.service';
 import { LayoutService } from './layout.service';
+import { RestService } from './REST.service';
 
 const SERVICES = [
   UserService,
@@ -33,11 +34,12 @@ const SERVICES = [
   TrafficBarService,
   ProfitBarAnimationChartService,
   LayoutService,
+  RestService
 ];
 
 @NgModule({
   imports: [
-    CommonModule,
+    CommonModule
   ],
   providers: [
     ...SERVICES,

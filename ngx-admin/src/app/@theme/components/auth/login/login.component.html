@@ -12,10 +12,16 @@
         </nb-alert>
 
         <nb-alert *ngIf="showMessages.success && messages?.length && !submitted" outline="success">
-            <div>
-                <strong>Hooray!</strong>
+            <div class="row">
+                <div class="col-md-6">
+                    <div>
+                        <strong>Hooray!</strong>
+                    </div>
+                    <div *ngFor="let message of messages">{{ message }}</div>
+                </div>
+                <div class="col-md-2 offset-md-1" [nbSpinner]="true" nbSpinnerStatus="success"></div>
             </div>
-            <div *ngFor="let message of messages">{{ message }}</div>
+
         </nb-alert>
 
         <div class="form-group">
@@ -51,9 +57,10 @@
         </div>
         -->
 
-        <button nbButton status="success" fullWidth [disabled]="submitted || !form.valid" [class.btn-pulse]="submitted">
+        <button nbButton fullWidth [disabled]="submitted || !form.valid" [class.btn-pulse]="submitted" status="success">
             Sign In
         </button>
+
     </form>
 
     <div class="links">

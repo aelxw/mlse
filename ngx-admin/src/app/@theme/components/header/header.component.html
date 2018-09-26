@@ -16,7 +16,7 @@
     [class.left]="position === 'inverse'">
     <nb-action icon="fa fa-door-open" class="toggle-layout" (click)="logout()"></nb-action>
     <nb-action>
-      <nb-user [name]="user?.name" [title]="user?.email"></nb-user>
+      <nb-user [name]="user?.fullname" [title]="user?.email"></nb-user>
     </nb-action>
     <nb-action class="control-item">
       <nb-search type="modal-move" (click)="startSearch()"></nb-search>
