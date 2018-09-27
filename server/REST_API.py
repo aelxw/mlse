@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[ ]:
+# In[1]:
 
 
 from flask import Flask, json, request, jsonify
@@ -16,9 +16,11 @@ from bs4 import BeautifulSoup
 import requests
 import jwt
 import os
+import datetime
+from datetime import datetime as dt
 
 
-# In[ ]:
+# In[2]:
 
 
 def gale_shapely(E):
@@ -43,11 +45,11 @@ def scrape_nhl_teams():
     res = requests.get(teams_url)
     soup = BeautifulSoup(res.text, 'html.parser')
     teams_li = soup.find(attrs={"id":"team"}).find(attrs={"class":"logoWall"}).findAll("li")
-    teams = [{"team":team.find("a").text.strip(), "logo":team.find("img").attrs["src"]} for team in teams_li]
+    teams = [{"name":team.find("a").text.strip(), "logo":team.find("img").attrs["src"]} for team in teams_li]
     return teams
 
 
-# In[ ]:
+# In[3]:
 
 
 app = Flask(__name__)
@@ -59,8 +61,10 @@ db = SQLAlchemy(app)
 ma = Marshmallow(app)
 http_server = WSGIServer(('', 2000), app)
 
-nhl_teams = scrape_nhl_teams()
-    
+
+# In[4]:
+
+
 class User(db.Model):
     email = db.Column(db.String(250), primary_key=True, unique=True)
     fullname = db.Column(db.String(250))
@@ -73,12 +77,46 @@ class User(db.Model):
         self.password = password
         self.fullname = fullname
 
+
+# In[5]:
+
+
 class UserSchema(ma.Schema):
     class Meta:
         fields = ('fullname', 'email', 'role')
 
 user_schema = UserSchema()
 users_schema = UserSchema(many=True)
+
+
+# In[6]:
+
+
+class Team(db.Model):
+    index = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(250))
+    logo = db.Column(db.String(500))
+    division = db.Column(db.String(50))
+    show = db.Column(db.Boolean)
+    date = db.Column(db.Date)
+
+    def __init__(self, name, division, logo):
+        self.name = name
+        self.division = division
+        self.logo = logo
+        self.show = False
+        self.date = dt.today().date()
+
+
+# In[7]:
+
+
+class TeamSchema(ma.Schema):
+    class Meta:
+        fields = ('index', 'name', 'division', 'logo', 'date', 'show')
+        
+team_schema = TeamSchema()
+teams_schema = TeamSchema(many=True)
 
 
 # In[ ]:
@@ -100,17 +138,15 @@ def sign_up():
         return json.dumps({"token":encoded})
     else:
         return "", 500
-    
-@app.route("/user-get-all", methods=["GET"])
-def get_user():
-    all_users = User.query.all()
-    result = users_schema.dump(all_users)
-    return jsonify(result.data)
 
 @app.route("/user-get", methods=["POST"])
 def user_detail():
     user = User.query.get(email)
     return user_schema.jsonify(user)
+
+@app.route("/user-get-all", methods=["GET"])
+def get_user():
+    return jsonify(users_schema.dump(User.query.all()).data)
 
 @app.route("/role-update", methods=["POST"])
 def user_update():
@@ -129,12 +165,53 @@ def user_delete():
     user = User.query.get(request.json["email"])
     db.session.delete(user)
     db.session.commit()
-
     return user_schema.jsonify(user)
 
-@app.route("/nhl-teams")
-def get_nhl_Teams():
-    return json.dumps(nhl_teams)
+@app.route("/teams-get-all")
+def get_nhl_teams():
+    return jsonify(teams_schema.dump(Team.query.all()).data)
+
+@app.route("/team-create", methods=["POST"])
+def team_create():
+    req_data = request.json
+    team = Team("", "", "")
+    if(req_data["division"]):
+        team.division = req_data["division"]
+    if(req_data["logo"]):
+        team.logo = req_data["logo"]
+    if(req_data["name"]):
+        team.name = req_data["name"]
+        
+    db.session.add(team)
+    db.session.commit()
+    return team_schema.jsonify(team)
+
+@app.route("/team-update", methods=["POST"])
+def team_update():
+    req_data = request.json
+    index = req_data["index"]
+    team = Team.query.get(index)
+    
+    team.show = req_data["show"]
+    if(req_data["date"]):
+        team.date = dt.strptime(req_data["date"], '%Y-%m-%d').date()
+    if(req_data["division"]):
+        team.division = req_data["division"]
+    if(req_data["logo"]):
+        team.logo = req_data["logo"]
+    if(req_data["name"]):
+        team.name = req_data["name"]
+
+    db.session.commit()
+    return team_schema.jsonify(team)
+
+@app.route("/team-delete", methods=["POST"])
+def team_delete():
+    team = Team.query.get(request.json["index"])
+    db.session.delete(team)
+    db.session.commit()
+    return team_schema.jsonify(team)
+
 
 @app.route("/login", methods=["POST"])
 def authenticate():

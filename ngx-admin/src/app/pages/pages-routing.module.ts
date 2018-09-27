@@ -8,6 +8,7 @@ import { NotFoundComponent } from './miscellaneous/not-found/not-found.component
 import { RankingComponent } from './ranking/ranking.component';
 import { HomeComponent } from './home/home.component';
 import { AdminComponent } from './admin/admin.component';
+import { AdminGuard } from './admin/admin-guard.service';
 
 const routes: Routes = [{
   path: '',
@@ -23,7 +24,7 @@ const routes: Routes = [{
     },
     {
       path: 'admin',
-      component: AdminComponent
+      loadChildren: './admin/admin.module#AdminModule'
     },
     {
       path: 'dashboard',

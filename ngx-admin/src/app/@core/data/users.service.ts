@@ -1,20 +1,28 @@
 
 import { Injectable } from '@angular/core';
 import { RestService } from './REST.service';
+import { NbTokenService, NbAuthJWTToken } from '@nebular/auth';
 
 @Injectable()
 export class UserService {
 
-  public users: Array<any> = [];
+  public user: any;
 
   constructor(
-    public restService: RestService
+    public restService: RestService,
+    private tokenService: NbTokenService
   ) {
-
+    this.tokenService.tokenChange().subscribe((token: NbAuthJWTToken) => {
+      this.user = token.getPayload();
+    });
   }
 
-  getUsers(){
+  getUsers() {
     return this.restService.getAllUsers();
+  }
+
+  getUser(){
+    return this.user;
   }
 
 }

@@ -32,12 +32,28 @@ export class RestService {
       return this.post("/user-delete", {email: email});
   }
 
-  updateRole(email, role){
-      return this.post("/role-update", {email: email, role: role});
+  updateRole(data){
+      return this.post("/role-update", data);
   }
 
   getAllUsers(){
       return this.get("/user-get-all");
+  }
+
+  getAllTeams(){
+    return this.get("/teams-get-all");
+  }
+
+  createTeam(data){
+    return this.post("/team-create", data);
+  }
+
+  updateTeam(data){
+    return this.post("/team-update", data);
+  }
+
+  deleteTeam(data){
+    return this.post("/team-delete", data);
   }
 
 }

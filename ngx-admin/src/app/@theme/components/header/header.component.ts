@@ -1,11 +1,12 @@
 import { Component, Input, OnInit } from '@angular/core';
 
-import { NbMenuService, NbSidebarService } from '@nebular/theme';
+import { NbMenuService, NbSidebarService, NbSearchService } from '@nebular/theme';
 import { AnalyticsService } from '../../../@core/utils/analytics.service';
 import { LayoutService } from '../../../@core/data/layout.service';
 import { NbAuthService, NbAuthJWTToken, NbTokenService } from '@nebular/auth';
 import { Router } from '@angular/router';
 import { UserService } from '../../../@core/data/users.service';
+import { HostListener } from '@angular/core';
 
 @Component({
   selector: 'ngx-header',
@@ -13,6 +14,14 @@ import { UserService } from '../../../@core/data/users.service';
   templateUrl: './header.component.html',
 })
 export class HeaderComponent implements OnInit {
+
+  @HostListener('window:keydown', ['$event'])
+  handleKeyDown(event: KeyboardEvent){
+    if(event.shiftKey && event.keyCode == 13){
+      
+      this.searchService.activateSearch("");
+    }
+  }
 
   @Input() position = 'normal';
 
@@ -26,7 +35,8 @@ export class HeaderComponent implements OnInit {
     private authService: NbAuthService,
     private router: Router,
     private tokenService: NbTokenService,
-    private userService: UserService
+    private userService: UserService,
+    private searchService: NbSearchService
   ) {
 
     this.authService.onTokenChange().subscribe((token: NbAuthJWTToken) => {
@@ -35,9 +45,24 @@ export class HeaderComponent implements OnInit {
       }
     });
 
+    this.searchService.onSearchSubmit().subscribe(search => {
+      let term: string = search.term;
+      
+      if(term.toLowerCase() == "home"){
+        this.router.navigate(['/pages/home']);
+      }
+
+      if(term.toLowerCase() == "ranking"){
+        this.router.navigate(['/pages/ranking']);
+      }
+
+    });
+
   }
 
   ngOnInit() {
+    
+
   }
 
   toggleSidebar(): boolean {

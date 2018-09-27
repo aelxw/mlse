@@ -36,8 +36,17 @@ export class PagesComponent {
           {
             title: 'Admin',
             icon: 'ion-person',
-            link: '/pages/admin',
-            hidden: !isAdmin
+            hidden: !isAdmin,
+            children: [
+              {
+                title: "Users",
+                link: "/pages/admin/users"
+              },
+              {
+                title: "Games",
+                link: "/pages/admin/games"
+              }
+            ]
           },
           {
             title: 'Features',

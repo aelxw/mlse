@@ -46,8 +46,14 @@ export class UsersComponent {
       },
       role: {
         title: 'Role',
-        type: 'string',
-      },
+        type: 'html',
+        editor: {
+            type: 'list',
+            config: {
+                list: [{value: 'user', title: 'user'}, {value: 'admin', title: 'admin'}]
+            }
+        },
+    },
     },
   };
 
@@ -57,6 +63,7 @@ export class UsersComponent {
     private restService: RestService
   ) {
     this.restService.getAllUsers().subscribe(res => {
+      console.log(res.json());
       this.source.load(res.json());
     });
   }
@@ -73,7 +80,7 @@ export class UsersComponent {
   }
 
   onEditConfirm(event): void {
-    this.restService.updateRole(event.newData["email"], event.newData["role"]).toPromise().then(res => {
+    this.restService.updateRole(event.newData).toPromise().then(res => {
       event.confirm.resolve();
     }, reason => {
       event.confirm.reject();
