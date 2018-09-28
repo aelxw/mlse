@@ -13,6 +13,8 @@
 
 @import './bootstrap-rtl';
 
+@import "~@angular/material/prebuilt-themes/indigo-pink.css";
+
 // install the framework and custom global styles
 @include nb-install() {
 

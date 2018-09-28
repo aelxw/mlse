@@ -1,5 +1,7 @@
 import { Injectable } from '@angular/core';
-import { Http, RequestOptionsArgs, Headers } from '@angular/http';
+import { Http, RequestOptionsArgs, Headers, Response } from '@angular/http';
+import { map } from 'rxjs/operators';
+import { IUser, ITeam } from '../../@theme/interfaces';
 
 @Injectable({
   providedIn: 'root'
@@ -37,11 +39,15 @@ export class RestService {
   }
 
   getAllUsers(){
-      return this.get("/user-get-all");
+      return this.get("/user-get-all").pipe(map<Response, Array<IUser>>(res => res.json()));
   }
 
-  getAllTeams(){
-    return this.get("/teams-get-all");
+  getNHLTeams(){
+    return this.get("/teams-get-nhl").pipe(map<Response, Array<ITeam>>(res => res.json()));
+  }
+
+  getNBATeams(){
+    return this.get("/teams-get-nba").pipe(map<Response, Array<ITeam>>(res => res.json()));
   }
 
   createTeam(data){

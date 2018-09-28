@@ -7,8 +7,9 @@ import { Ng2SmartTableModule } from 'ng2-smart-table';
 import { SmartTableService } from '../../@core/data/smart-table.service';
 import { AdminRoutingModule } from './admin-routing.module';
 import { AdminGuard } from './admin-guard.service';
+import { LogoComponent } from './teams/logo.component';
+import { TeamsComponent } from './teams/teams.component';
 import { GamesComponent } from './games/games.component';
-import { LogoComponent } from './games/logo.component';
 
 @NgModule({
   imports: [
@@ -19,8 +20,9 @@ import { LogoComponent } from './games/logo.component';
   declarations: [
     AdminComponent,
     UsersComponent,
-    GamesComponent,
-    LogoComponent
+    TeamsComponent,
+    LogoComponent,
+    GamesComponent
   ],
   providers: [
     SmartTableService,

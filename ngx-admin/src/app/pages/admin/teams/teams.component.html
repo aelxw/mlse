@@ -1,0 +1,27 @@
+<div class="col-md-9">
+    <nb-card>
+        <nb-card-header>
+            NHL Teams
+        </nb-card-header>
+
+        <nb-card-body>
+            <ng2-smart-table [settings]="settings" [source]="nhlSource" (createConfirm)="onCreateConfirm($event)" (editConfirm)="onEditConfirm($event)"
+                (deleteConfirm)="onDeleteConfirm($event)">
+            </ng2-smart-table>
+        </nb-card-body>
+    </nb-card>
+</div>
+
+<div class="col-md-9">
+    <nb-card>
+        <nb-card-header>
+            NBA Teams
+        </nb-card-header>
+
+        <nb-card-body>
+            <ng2-smart-table [settings]="settings" [source]="nbaSource" (createConfirm)="onCreateConfirm($event)" (editConfirm)="onEditConfirm($event)"
+                (deleteConfirm)="onDeleteConfirm($event)">
+            </ng2-smart-table>
+        </nb-card-body>
+    </nb-card>
+</div>

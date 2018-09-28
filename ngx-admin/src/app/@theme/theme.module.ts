@@ -21,7 +21,8 @@ import {
   NbAlertModule,
   NbInputModule,
   NbButtonModule,
-  NbSpinnerModule
+  NbSpinnerModule,
+  NbCalendarModule
 } from '@nebular/theme';
 
 import { NbSecurityModule } from '@nebular/security';
@@ -46,6 +47,7 @@ import {
   RoundPipe,
   TimingPipe,
   NumberWithCommasPipe,
+  FilterPipe,
 } from './pipes';
 import {
   OneColumnLayoutComponent,
@@ -57,6 +59,7 @@ import { DEFAULT_THEME } from './styles/theme.default';
 import { COSMIC_THEME } from './styles/theme.cosmic';
 import { CORPORATE_THEME } from './styles/theme.corporate';
 import { RouterModule } from '@angular/router';
+import { MaterialModule } from './material.module';
 
 const BASE_MODULES = [CommonModule, FormsModule, ReactiveFormsModule];
 
@@ -80,7 +83,9 @@ const NB_MODULES = [
   NbInputModule,
   RouterModule,
   NbButtonModule,
-  NbSpinnerModule
+  NbSpinnerModule,
+  MaterialModule,
+  NbCalendarModule
 ];
 
 const COMPONENTS = [
@@ -112,6 +117,7 @@ const PIPES = [
   RoundPipe,
   TimingPipe,
   NumberWithCommasPipe,
+  FilterPipe
 ];
 
 const NB_THEME_PROVIDERS = [

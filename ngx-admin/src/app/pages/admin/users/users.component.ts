@@ -1,7 +1,9 @@
 import { Component } from '@angular/core';
 import { LocalDataSource, } from 'ng2-smart-table';
 import { RestService } from '../../../@core/data/REST.service';
-import { tap } from 'rxjs/operators';
+import { map } from 'rxjs/operators';
+import { IUser } from '../../../@theme/interfaces';
+import { Response } from '@angular/http';
 
 @Component({
   selector: 'users',
@@ -62,10 +64,7 @@ export class UsersComponent {
   constructor(
     private restService: RestService
   ) {
-    this.restService.getAllUsers().subscribe(res => {
-      console.log(res.json());
-      this.source.load(res.json());
-    });
+    this.restService.getAllUsers().toPromise().then(users => this.source.load(users));
   }
 
   onDeleteConfirm(event): void {

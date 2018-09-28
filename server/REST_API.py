@@ -20,7 +20,7 @@ import datetime
 from datetime import datetime as dt
 
 
-# In[2]:
+# In[31]:
 
 
 def gale_shapely(E):
@@ -39,14 +39,36 @@ def gale_shapely(E):
                 M[:, y] = 0
                 M[x, y] = 1
     return M
-
+        
 def scrape_nhl_teams():
     teams_url = "http://www.sportslogos.net/teams/list_by_league/1/National_Hockey_League/NHL/logos/"
     res = requests.get(teams_url)
     soup = BeautifulSoup(res.text, 'html.parser')
     teams_li = soup.find(attrs={"id":"team"}).find(attrs={"class":"logoWall"}).findAll("li")
-    teams = [{"name":team.find("a").text.strip(), "logo":team.find("img").attrs["src"]} for team in teams_li]
+    teams = [{"name":team.find("a").text.strip(), "logo":team.find("img").attrs["src"], "division":"NHL"} for team in teams_li]
     return teams
+
+def insert_nhl_teams():
+    nhl_teams = scrape_nhl_teams()
+    for team in nhl_teams:
+        t = Team(team["name"], team["division"], team["logo"])
+        db.session.add(t)
+        db.session.commit()
+
+def scrape_nba_teams():
+    teams_url = "http://www.nba.com/teams"
+    res = requests.get(teams_url)
+    soup = BeautifulSoup(res.text, 'html.parser')
+    teams_div = soup.find("section", attrs={"id":"block-teamlistblock"}).find("div", attrs={"class":"team__list_wrapper"}).findAll("div")
+    teams = [{"name":team.find("a").text.strip(), "logo":team.find("img").attrs["src"], "division":"NBA"} for team in teams_div]
+    return teams
+
+def insert_nba_teams():
+    nba_teams = scrape_nba_teams()
+    for team in nba_teams:
+        t = Team(team["name"], team["division"], team["logo"])
+        db.session.add(t)
+        db.session.commit()
 
 
 # In[3]:
@@ -89,7 +111,7 @@ user_schema = UserSchema()
 users_schema = UserSchema(many=True)
 
 
-# In[6]:
+# In[7]:
 
 
 class Team(db.Model):
@@ -97,23 +119,19 @@ class Team(db.Model):
     name = db.Column(db.String(250))
     logo = db.Column(db.String(500))
     division = db.Column(db.String(50))
-    show = db.Column(db.Boolean)
-    date = db.Column(db.Date)
 
     def __init__(self, name, division, logo):
         self.name = name
         self.division = division
         self.logo = logo
-        self.show = False
-        self.date = dt.today().date()
 
 
-# In[7]:
+# In[6]:
 
 
 class TeamSchema(ma.Schema):
     class Meta:
-        fields = ('index', 'name', 'division', 'logo', 'date', 'show')
+        fields = ('index', 'name', 'division', 'logo')
         
 team_schema = TeamSchema()
 teams_schema = TeamSchema(many=True)
@@ -167,9 +185,13 @@ def user_delete():
     db.session.commit()
     return user_schema.jsonify(user)
 
-@app.route("/teams-get-all")
+@app.route("/teams-get-nhl")
 def get_nhl_teams():
-    return jsonify(teams_schema.dump(Team.query.all()).data)
+    return jsonify(teams_schema.dump(Team.query.filter_by(division="NHL")).data)
+
+@app.route("/teams-get-nba")
+def get_nba_teams():
+    return jsonify(teams_schema.dump(Team.query.filter_by(division="NBA")).data)
 
 @app.route("/team-create", methods=["POST"])
 def team_create():

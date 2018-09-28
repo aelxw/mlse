@@ -39,13 +39,17 @@ export class PagesComponent {
             hidden: !isAdmin,
             children: [
               {
+                title: "Games",
+                link: "/pages/admin/games"
+              },
+              {
+                title: "Teams",
+                link: "/pages/admin/teams"
+              },
+              {
                 title: "Users",
                 link: "/pages/admin/users"
               },
-              {
-                title: "Games",
-                link: "/pages/admin/games"
-              }
             ]
           },
           {
