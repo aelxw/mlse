@@ -80,7 +80,6 @@ export class GamesComponent {
 
   addTempGame(form: NgForm) {
     let formData = form.value;
-    console.log(formData);
     let data = {
       name: formData.team.name,
       logo: formData.team.logo,
