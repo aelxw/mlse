@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[1]:
+# In[ ]:
 
 
 from flask import Flask, json, request, jsonify
@@ -20,7 +20,7 @@ import datetime
 from datetime import datetime as dt
 
 
-# In[31]:
+# In[ ]:
 
 
 def gale_shapely(E):
@@ -68,23 +68,23 @@ def insert_nba_teams():
     for team in nba_teams:
         t = Team(team["name"], team["division"], team["logo"])
         db.session.add(t)
-        db.session.commit()
+        db.session.commit() 
 
 
-# In[3]:
+# In[ ]:
 
 
 app = Flask(__name__)
 CORS(app)
 basedir = os.path.abspath(os.path.dirname(__name__))
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'mlse.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'database/mlse.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
 http_server = WSGIServer(('', 2000), app)
 
 
-# In[4]:
+# In[ ]:
 
 
 class User(db.Model):
@@ -100,7 +100,7 @@ class User(db.Model):
         self.fullname = fullname
 
 
-# In[5]:
+# In[ ]:
 
 
 class UserSchema(ma.Schema):
@@ -111,11 +111,11 @@ user_schema = UserSchema()
 users_schema = UserSchema(many=True)
 
 
-# In[7]:
+# In[ ]:
 
 
 class Team(db.Model):
-    index = db.Column(db.Integer, primary_key=True)
+    team_id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(250))
     logo = db.Column(db.String(500))
     division = db.Column(db.String(50))
@@ -126,12 +126,12 @@ class Team(db.Model):
         self.logo = logo
 
 
-# In[6]:
+# In[ ]:
 
 
 class TeamSchema(ma.Schema):
     class Meta:
-        fields = ('index', 'name', 'division', 'logo')
+        fields = ('team_id', 'name', 'division', 'logo')
         
 team_schema = TeamSchema()
 teams_schema = TeamSchema(many=True)
@@ -211,8 +211,8 @@ def team_create():
 @app.route("/team-update", methods=["POST"])
 def team_update():
     req_data = request.json
-    index = req_data["index"]
-    team = Team.query.get(index)
+    team_id = req_data["team_id"]
+    team = Team.query.get(team_id)
     
     team.show = req_data["show"]
     if(req_data["date"]):
@@ -229,7 +229,7 @@ def team_update():
 
 @app.route("/team-delete", methods=["POST"])
 def team_delete():
-    team = Team.query.get(request.json["index"])
+    team = Team.query.get(request.json["team_id"])
     db.session.delete(team)
     db.session.commit()
     return team_schema.jsonify(team)
@@ -257,7 +257,7 @@ def shutdown():
     return "Server shutting down..."
 
 
-# In[ ]:
+# In[97]:
 
 
 http_server.serve_forever()
