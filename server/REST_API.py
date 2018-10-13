@@ -23,23 +23,6 @@ from datetime import datetime as dt
 # In[ ]:
 
 
-def gale_shapely(E):
-    # n employees, m tickets
-    T = np.random.rand(E.shape[0], E.shape[1])
-    M = np.zeros(T.shape)
-    while M.sum() < np.min(E.shape):
-        un_i = np.linspace(0, M.shape[0]-1, M.shape[0])[M.sum(axis=1) == 0]
-        if un_i.size > 0:
-            x = int(un_i[0])
-            y = E[x, :].argmin()
-            E[x,y] = np.max(E.shape)+1
-            if M[:, y].sum() == 0:
-                M[x, y] = 1
-            elif T[x, y] < T[M[:, y].argmax(), y]:
-                M[:, y] = 0
-                M[x, y] = 1
-    return M
-        
 def scrape_nhl_teams():
     teams_url = "http://www.sportslogos.net/teams/list_by_league/1/National_Hockey_League/NHL/logos/"
     res = requests.get(teams_url)
