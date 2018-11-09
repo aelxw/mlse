@@ -1,12 +1,44 @@
 
 # coding: utf-8
 
-# In[210]:
+# In[245]:
 
 
-# Generate test data
-
+import pandas as pd
+import numpy as np
+import cvxpy as cvx
+from functools import partial
 from random import sample, shuffle
+from copy import deepcopy
+from warnings import filterwarnings
+
+filterwarnings("ignore")
+pd.options.display.max_rows = None
+
+
+# In[239]:
+
+
+#r_employees = {
+#    "e1":["A", "B", "C"],
+#    "e2":["B", "D"],
+#    "e3":["B", "C"],
+#    "e4":["A"],
+#    "e5":["A", "C", "D"]
+#}
+#ticket_capacity = 2
+#prev_rank = {
+#    "e1":3,
+#    "e2":1,
+#    "e3":2,
+#    "e4":3,
+#    "e5":0
+#}
+#res = pd.DataFrame.from_dict(prev_rank, orient="index")
+
+
+
+# Make fake data
 
 def employee_prefs(n_employees, n_preferences, tickets):
 
@@ -25,38 +57,25 @@ def employee_prefs(n_employees, n_preferences, tickets):
     
     return r_employees
 
+# Generate ticket preferences for Gale Shapley
 
-# In[211]:
-
-
-# Generate ticket preferences
-
-import pandas as pd
-from random import shuffle
-
-def ticket_prefs(r_employees, tickets):
+def ticket_prefs(r_employees, tickets, score=None):
     r = pd.DataFrame.from_dict(r_employees, orient="index")
     t_prefs = {}
     for t in tickets:
         r_t = []
         for col in r.columns:
             temp = r.loc[r.loc[:, col] == t].index.tolist()
-            shuffle(temp)
+            if(score is None):
+                shuffle(temp)
+            else:
+                priority = score.mean(axis=1).sort_values(ascending=True).index.tolist()
+                temp = [x for x in priority if x in temp]
             r_t.extend(temp)
         t_prefs[t] = r_t
     return t_prefs
-    
-r_tickets = ticket_prefs(r_employees, tickets)
-
-
-# In[212]:
-
 
 # Gale Shapley
-
-import numpy as np
-from copy import deepcopy
-from random import shuffle
 
 def gale_shapely(r_employees, r_tickets, ticket_capacity):
     
@@ -92,59 +111,50 @@ def gale_shapely(r_employees, r_tickets, ticket_capacity):
             m_employees[e] = [t]
             m_employees[old_e] = []
     
-    return m_employees, m_tickets
+    return m_employees
 
 
-# In[213]:
+
+# Get ranking of matches
+def result_rank(real, ideal):
+    e_rank = {}
+    for e in real:
+        m = real[e]
+        if len(m) > 0:
+            t = m[0]
+            r = ideal[e].index(t)+1
+        else:
+            r = 0
+        e_rank[e] = r
+    return pd.DataFrame.from_dict(e_rank, orient="index")
 
 
-n_tickets = 8
-tickets = ["t"+str(x) for x in range(1,n_tickets+1)]
-ticket_capacity = 17
-
-n_employees = 136
-n_preferences = 3
-
-r_employees = employee_prefs(n_employees, n_preferences, tickets)
-
-
-# In[214]:
-
-
-r_tickets = ticket_prefs(r_employees, tickets)
-m_employees_gs, m_tickets_gs = gale_shapely(r_employees, r_tickets, ticket_capacity)
-
-
-# In[221]:
-
-
-# See how many employees were matched with given game
-for t in m_tickets_gs:
-    print(t + ": " + str(len(m_tickets_gs[t])))
-
-# Check to see if any employees got matched with tickets they didn't want
-for e in m_employees_gs:
-    for t in m_employees_gs[e]:
-        if t not in r_employees[e]: print(e)
-
-
-# In[3]:
+# In[376]:
 
 
 # Integer programming
 
-import cvxpy as cvx
-import pandas as pd
-import numpy as np
-from warnings import filterwarnings
-filterwarnings("ignore")
+def f(x, n=3, a=0.1, s=1):
+    if x < 1 or x > n:
+        v = 0
+    elif s == 0:
+        v = ((1-a)/(1-n))*x + ((a-n)/(1-n))
+    else:
+        v = (np.exp(s*(x-1))*(a-1)+np.exp(s*(n-1))-a)/(np.exp(s*(n-1))-1)
+    return 1-v
 
-def ip(r_employees, ticket_capacity=None, verbose=False):
+def wagg(df, s=1):
+    m = df.shape[1]
+    x = np.linspace(1, m, m)
+    s = s if s >= 0 else 0
+    w = np.exp(s*(x-m))
+    w = w/w.sum()
+    return df.values.dot(w)
+
+def ip(r_employees, ticket_capacity, prev_rankings=None, prev_window=3):
     
-    r = pd.DataFrame(r_employees).T
-    r = r.assign(x="x")
-    r.columns = range(1, r.shape[1]+1)
-    tickets = sorted(r.unstack().unique().tolist())
+    r = pd.DataFrame.from_dict(r_employees, orient="index")
+    tickets = sorted(r.unstack().dropna().unique().tolist())
 
     n_employees = len(r_employees)
     n_t = r.shape[1]
@@ -158,36 +168,45 @@ def ip(r_employees, ticket_capacity=None, verbose=False):
 
     # Constraints
 
-    # Each employee gets >= 1 ticket
-    A1 = -np.kron(np.eye(n_employees), np.ones(n_t))
-    b1 = -np.ones((A1.shape[0],1))
+    # Each employee gets <= 1 ticket
+    A1 = np.kron(np.eye(n_employees), np.ones(n_t))
+    b1 = np.ones((A1.shape[0],1))
 
     # <= ticket capacity
     rows = []
-    for t in tickets[:-1]:
+    for t in tickets:
         temp = r.apply(lambda x: x.map({t:1})).fillna(0).values.reshape(1,-1)
         rows.append(temp)
     A2 = np.vstack(rows)
     b2 = np.ones((A2.shape[0],1))*ticket_capacity
-
-    # Variables >= 0
-    A3 = -np.eye(n_employees * n_t)
-    b3 = np.zeros((A3.shape[0], 1))
+    
+    # Unvoted
+    A3 = np.array(r.isnull().values.flatten(), np.float64)
+    b3 = 0
 
     A = np.vstack((A1, A2, A3))
     b = np.vstack((b1, b2, b3))
 
-    constraints = [A*x <= b]
+    constraints = [A*x <= b, x >= 0]
 
     # Objective function
     
-    c = np.tile(np.array(range(1, r.shape[1]+1)), r.shape[0])
-    obj = cvx.Minimize(c * x)
+    c = np.kron(np.ones((1,r.shape[0])).flatten(), 1/np.array([1, 2, 3]))
+    
+    if prev_rankings is not None:
+        w = prev_rankings.shape[1] if prev_rankings.shape[1] <= prev_window else prev_window
+        temp = prev_rankings.iloc[:, prev_rankings.columns[-w:]]
+        s_i = wagg(temp.loc[r.index].applymap(f), s=2)
+        s_i = np.kron(s_i, np.array([1,-1,-1]))
+        c = c + s_i
+    
+    c[A3 > 0] = 0
+    obj = cvx.Maximize(c * x)
 
     # Solve
 
     problem = cvx.Problem(obj, constraints)
-    problem.solve(solver=cvx.ECOS_BB, max_iters=100, mi_max_iters=5000, verbose=verbose)
+    problem.solve(solver=cvx.ECOS_BB, max_iters=100, mi_max_iters=5000)
 
     if problem.status == 'optimal':
         x_star = x.value.reshape(-1,n_t)
@@ -196,22 +215,37 @@ def ip(r_employees, ticket_capacity=None, verbose=False):
         for e in r_m.index:
             m_employees[e] = r_m.loc[e].dropna().tolist()
 
-        return m_employees, r_m, problem
+        return m_employees
     else:
         print(problem.status)
-        return {}, None, problem
+        return {}
 
 
-# In[ ]:
+# In[381]:
 
 
-m_employees_ip, r_m, p = ip(r_employees, ticket_capacity, True)
+n_tickets = 5
+tickets = ["t"+str(x) for x in range(1,n_tickets+1)]
+ticket_capacity = 2
+
+n_employees = 10
+n_preferences = 3
+
+r_employees = employee_prefs(n_employees, n_preferences, tickets)
 
 
-# In[ ]:
+# In[382]:
 
 
-for e in m_employees_ip:
-    if m_employees_ip[e][0] != r_employees[e][0]:
-        print(e)
+r_tickets = ticket_prefs(r_employees, tickets, None)
+m_employees_gs = gale_shapely(r_employees, r_tickets, ticket_capacity)
+
+
+# In[383]:
+
+
+res = result_rank(m_employees_gs, r_employees)
+for i in range(0, 3):
+    m_employees = ip(r_employees, ticket_capacity, res)
+    res = pd.concat((res, result_rank(m_employees, r_employees)), axis=1, ignore_index=True)
 
