@@ -94,6 +94,7 @@ pyasn1==0.3.6
 pyasn1-modules==0.2.2
 pycparser==2.18
 PyDispatcher==2.0.5
+pyDOE==0.3.8
 Pygments==2.2.0
 PyInstaller==3.3.1
 PyJWT==1.6.4
@@ -112,7 +113,7 @@ qtconsole==4.3.1
 query-string==0.0.12
 queuelib==1.4.2
 request==0.0.13
-requests>=2.20.0
+requests==2.18.4
 rsa==3.4.2
 scikit-learn==0.19.1
 scipy==1.0.0
