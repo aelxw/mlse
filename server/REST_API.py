@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[ ]:
+# In[3]:
 
 
 from flask import Flask, json, request, jsonify
@@ -18,6 +18,11 @@ import jwt
 import os
 import datetime
 from datetime import datetime as dt
+
+from warnings import filterwarnings
+filterwarnings("ignore")
+
+from Models import BO, GRID
 
 
 # In[ ]:
@@ -176,6 +181,21 @@ def get_nhl_teams():
 def get_nba_teams():
     return jsonify(teams_schema.dump(Team.query.filter_by(division="NBA")).data)
 
+@app.route("/teams-get")
+def get_teams():
+    return jsonify(teams_schema.dump(Team.query).data)
+
+@app.route("/match", methods=["POST"])
+def run_matching():
+    req_data = request.json
+    data = pd.DataFrame.from_dict(req_data, orient="index")
+    
+    prev_rankings = pd.DataFrame(np.random.randint(0, 4, data.shape), index=data.index)
+    bo = BO(data, 22, prev_rankings)
+    bo.optimize()
+    
+    return jsonify(bo.sol)
+
 @app.route("/team-create", methods=["POST"])
 def team_create():
     req_data = request.json
@@ -240,7 +260,7 @@ def shutdown():
     return "Server shutting down..."
 
 
-# In[97]:
+# In[ ]:
 
 
 http_server.serve_forever()

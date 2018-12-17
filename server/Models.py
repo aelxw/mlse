@@ -51,7 +51,8 @@ def U_joint(X, U, K):
     
     return k1*u1(x1) + k2*u2(x2) + k3*u3(x3) + k*k1*k2*u1(x1)*u2(x2) + k*k1*k3*u1(x1)*u3(x3) + k*k2*k3*u2(x2)*u3(x3) + (k*k)*k1*k2*k3*u1(x1)*u2(x2)*u3(x3)
 
-def U_init():
+def U_init(self):
+    data = self.data
     utilities = {
         "ec":{"best":0, "worst":len(data)},
         "r1":{"best":len(data), "worst":0},
@@ -176,7 +177,7 @@ class BO():
         self.data = data
         self.ticket_capacity = ticket_capacity
         self.prev_rankings = prev_rankings
-        self.U, self.K, self.priority = U_init()
+        self.U, self.K, self.priority = U_init(self)
         
         ei = prev_rankings.iloc[:, -1].values.flatten()
         self.ei = np.array(((ei == 0) | (ei == 3)), dtype=np.float64)
@@ -261,25 +262,25 @@ class GRID():
 # In[ ]:
 
 
-data = process_data("data1.csv")
-ticket_capacity = 22
+#data = process_data("data1.csv")
+#ticket_capacity = 22
 
 #data = process_data("data2.csv")
 #ticket_capacity = 17
 
-prev_rankings = pd.DataFrame(np.random.randint(0, 4, data.shape), index=data.index)
+#prev_rankings = pd.DataFrame(np.random.randint(0, 4, data.shape), index=data.index)
 
 
 # In[ ]:
 
 
-bo = BO(data, ticket_capacity, prev_rankings)
-bo.optimize()
+#bo = BO(data, ticket_capacity, prev_rankings)
+#bo.optimize()
 
 
 # In[ ]:
 
 
-grid = GRID(data, ticket_capacity, prev_rankings)
-grid.optimize()
+#grid = GRID(data, ticket_capacity, prev_rankings)
+#grid.optimize()
 
