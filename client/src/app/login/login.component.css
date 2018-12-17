@@ -1,9 +1,0 @@
-.login-panel {
-    width: 20rem;
-    position: absolute;
-    margin: 12rem 0;
-    padding: 1rem;
-    box-shadow: 2px 5px 5px rgba(0,0,0,0.25);
-    background-color: rgba(255, 255, 255, 0.9);
-    border-radius: 5px;
-}
