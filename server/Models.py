@@ -1,25 +1,22 @@
 
 # coding: utf-8
 
-# In[ ]:
+# In[28]:
 
 
 import pandas as pd
+pd.options.display.max_rows = None
 import numpy as np
 import cvxpy as cvx
 from functools import partial
-from warnings import filterwarnings
 from matplotlib import pyplot as plt
 from skopt import gp_minimize
 
-filterwarnings("ignore")
-pd.options.display.max_rows = None
+
+# In[2]:
 
 
-# In[ ]:
-
-
-def process_data(filename):
+def read_data(filename):
     data = pd.read_csv(filename, names=["id", "r1", "r2", "r3"])
     data.id = data.id.apply(lambda x: "e"+str(x))
     data = data.set_index("id")
@@ -56,14 +53,14 @@ def U_init(self):
     utilities = {
         "ec":{"best":0, "worst":len(data)},
         "r1":{"best":len(data), "worst":0},
-        "unmatched":{"best":0, "worst":len(data)},
-        "r3":{"best":0, "worst":len(data)}
+        "unmatched":{"best":0, "worst":len(data)}
     }
-    priority = ["ec", "r1", "unmatched"]
     
+    priority = ["ec", "r1", "unmatched"]
     k1 = 0.7
     k2 = 0.6
     k3 = 0.55
+    
     k = newton_k(-2, k1, k2, k3) if (k1+k2+k3) > 1 else newton_k(2, k1, k2, k3)
 
     U = [U_linear(utilities[x]) for x in priority]
@@ -88,7 +85,7 @@ def U_eval(x_star, model):
     return score, vals
 
 
-# In[ ]:
+# In[3]:
 
 
 # Integer programming
@@ -120,11 +117,13 @@ def ip(r_employees, ticket_capacity, c):
 
     # <= ticket capacity
     rows = []
+    b2 = []
     for t in tickets:
         temp = r.apply(lambda x: x.map({t:1})).fillna(0).values.reshape(1,-1)
         rows.append(temp)
+        b2.append(ticket_capacity[t])
     A2 = np.vstack(rows)
-    b2 = np.ones((A2.shape[0],1))*ticket_capacity
+    b2 = np.array(b2).reshape(-1,1)
     
     # Unvoted
     A3 = np.array(r.isnull().values.flatten(), np.float64)
@@ -162,7 +161,7 @@ def ip(r_employees, ticket_capacity, c):
         return {}, None
 
 
-# In[ ]:
+# In[4]:
 
 
 class BO():
@@ -215,7 +214,7 @@ class BO():
         gp_minimize(self.run, dimensions, n_calls=50, noise=1e-10, acq_func="EI")
 
 
-# In[ ]:
+# In[20]:
 
 
 class GRID():
@@ -230,7 +229,7 @@ class GRID():
         self.data = data
         self.ticket_capacity = ticket_capacity
         self.prev_rankings = prev_rankings
-        self.U, self.K, self.priority = U_init()
+        self.U, self.K, self.priority = U_init(self)
         
         ei = prev_rankings.iloc[:, -1].values.flatten()
         self.ei = np.array(((ei == 0) | (ei == 3)), dtype=np.float64)
@@ -259,26 +258,25 @@ class GRID():
                         self.run(loc)
 
 
-# In[ ]:
+# In[24]:
 
 
-#data = process_data("data1.csv")
-#ticket_capacity = 22
-
-#data = process_data("data2.csv")
-#ticket_capacity = 17
-
+#data = read_data("data1.csv")
 #prev_rankings = pd.DataFrame(np.random.randint(0, 4, data.shape), index=data.index)
+#tickets = sorted(data.unstack().dropna().unique().tolist())
+#ticket_capacity = {}
+#for t in tickets:
+#    ticket_capacity[t] = 22
 
 
-# In[ ]:
+# In[25]:
 
 
 #bo = BO(data, ticket_capacity, prev_rankings)
 #bo.optimize()
 
 
-# In[ ]:
+# In[26]:
 
 
 #grid = GRID(data, ticket_capacity, prev_rankings)

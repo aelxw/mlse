@@ -19,9 +19,6 @@ import os
 import datetime
 from datetime import datetime as dt
 
-from warnings import filterwarnings
-filterwarnings("ignore")
-
 from Models import BO, GRID
 
 
@@ -188,10 +185,13 @@ def get_teams():
 @app.route("/match", methods=["POST"])
 def run_matching():
     req_data = request.json
-    data = pd.DataFrame.from_dict(req_data, orient="index")
+    responses = req_data[0]
+    capacity = req_data[1]
     
+    data = pd.DataFrame.from_dict(responses, orient="index")
     prev_rankings = pd.DataFrame(np.random.randint(0, 4, data.shape), index=data.index)
-    bo = BO(data, 22, prev_rankings)
+    
+    bo = BO(data, capacity, prev_rankings)
     bo.optimize()
     
     return jsonify(bo.sol)
