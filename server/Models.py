@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[28]:
+# In[ ]:
 
 
 import pandas as pd
@@ -13,7 +13,7 @@ from matplotlib import pyplot as plt
 from skopt import gp_minimize
 
 
-# In[2]:
+# In[ ]:
 
 
 def read_data(filename):
@@ -57,9 +57,7 @@ def U_init(self):
     }
     
     priority = ["ec", "r1", "unmatched"]
-    k1 = 0.7
-    k2 = 0.6
-    k3 = 0.55
+    k1, k2, k3 = [0.7, 0.6, 0.55]
     
     k = newton_k(-2, k1, k2, k3) if (k1+k2+k3) > 1 else newton_k(2, k1, k2, k3)
 
@@ -85,7 +83,7 @@ def U_eval(x_star, model):
     return score, vals
 
 
-# In[3]:
+# In[ ]:
 
 
 # Integer programming
@@ -161,7 +159,7 @@ def ip(r_employees, ticket_capacity, c):
         return {}, None
 
 
-# In[4]:
+# In[ ]:
 
 
 class BO():
@@ -171,6 +169,7 @@ class BO():
         self.bestscore = 0
         self.bestc = np.array([])
         self.sol = {}
+        self.x_star = {}
         self.solsummary = None
         
         self.data = data
@@ -205,6 +204,7 @@ class BO():
             self.bestscore = score
             self.bestc = c
             self.sol = m_employees
+            self.x_star = x_star
             self.solsummary = pd.DataFrame(np.hstack((vals.flatten(), score)).reshape(1,-1), columns=self.priority + ["score"])
         
         return -score
@@ -214,7 +214,7 @@ class BO():
         gp_minimize(self.run, dimensions, n_calls=50, noise=1e-10, acq_func="EI")
 
 
-# In[20]:
+# In[ ]:
 
 
 class GRID():
@@ -224,6 +224,7 @@ class GRID():
         self.bestscore = 0
         self.bestc = np.array([])
         self.sol = {}
+        self.x_star = {}
         self.solsummary = None
         
         self.data = data
@@ -247,6 +248,7 @@ class GRID():
             self.bestscore = score
             self.bestc = c
             self.sol = m_employees
+            self.x_star = x_star
             self.solsummary = pd.DataFrame(np.hstack((vals.flatten(), score)).reshape(1,-1), columns=self.priority + ["score"])
     
     def optimize(self):
@@ -258,7 +260,7 @@ class GRID():
                         self.run(loc)
 
 
-# In[24]:
+# In[ ]:
 
 
 #data = read_data("data1.csv")
@@ -269,14 +271,14 @@ class GRID():
 #    ticket_capacity[t] = 22
 
 
-# In[25]:
+# In[ ]:
 
 
 #bo = BO(data, ticket_capacity, prev_rankings)
 #bo.optimize()
 
 
-# In[26]:
+# In[ ]:
 
 
 #grid = GRID(data, ticket_capacity, prev_rankings)

@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[3]:
+# In[ ]:
 
 
 from flask import Flask, json, request, jsonify
@@ -14,7 +14,6 @@ import numpy as np
 import pandas as pd
 from bs4 import BeautifulSoup
 import requests
-import jwt
 import os
 import datetime
 from datetime import datetime as dt
@@ -33,13 +32,6 @@ def scrape_nhl_teams():
     teams = [{"name":team.find("a").text.strip(), "logo":team.find("img").attrs["src"], "division":"NHL"} for team in teams_li]
     return teams
 
-def insert_nhl_teams():
-    nhl_teams = scrape_nhl_teams()
-    for team in nhl_teams:
-        t = Team(team["name"], team["division"], team["logo"])
-        db.session.add(t)
-        db.session.commit()
-
 def scrape_nba_teams():
     teams_url = "http://www.nba.com/teams"
     res = requests.get(teams_url)
@@ -48,12 +40,25 @@ def scrape_nba_teams():
     teams = [{"name":team.find("a").text.strip(), "logo":team.find("img").attrs["src"], "division":"NBA"} for team in teams_div]
     return teams
 
+def insert_nhl_teams():
+    nhl_teams = scrape_nhl_teams()
+    if(len(nhl_teams) > 0):
+        Team.query.filter_by(division="NHL").delete()
+        for team in nhl_teams:
+            t = Team(team["name"], team["division"], team["logo"])
+            db.session.add(t)
+        db.session.commit()
+    return len(nhl_teams)
+
 def insert_nba_teams():
     nba_teams = scrape_nba_teams()
-    for team in nba_teams:
-        t = Team(team["name"], team["division"], team["logo"])
-        db.session.add(t)
-        db.session.commit() 
+    if(len(nba_teams) > 0):
+        Team.query.filter_by(division="NBA").delete()
+        for team in nba_teams:
+            t = Team(team["name"], team["division"], team["logo"])
+            db.session.add(t)
+        db.session.commit()
+    return len(nba_teams)
 
 
 # In[ ]:
@@ -72,36 +77,8 @@ http_server = WSGIServer(('', 2000), app)
 # In[ ]:
 
 
-class User(db.Model):
-    email = db.Column(db.String(250), primary_key=True, unique=True)
-    fullname = db.Column(db.String(250))
-    role = db.Column(db.String(150))
-    password = db.Column(db.String(250))
-
-    def __init__(self, email, password, fullname):
-        self.email = email
-        self.role = "user"
-        self.password = password
-        self.fullname = fullname
-
-
-# In[ ]:
-
-
-class UserSchema(ma.Schema):
-    class Meta:
-        fields = ('fullname', 'email', 'role')
-
-user_schema = UserSchema()
-users_schema = UserSchema(many=True)
-
-
-# In[ ]:
-
-
 class Team(db.Model):
-    team_id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(250))
+    name = db.Column(db.String(250), primary_key=True)
     logo = db.Column(db.String(500))
     division = db.Column(db.String(50))
 
@@ -110,13 +87,9 @@ class Team(db.Model):
         self.division = division
         self.logo = logo
 
-
-# In[ ]:
-
-
 class TeamSchema(ma.Schema):
     class Meta:
-        fields = ('team_id', 'name', 'division', 'logo')
+        fields = ('name', 'division', 'logo')
         
 team_schema = TeamSchema()
 teams_schema = TeamSchema(many=True)
@@ -125,62 +98,34 @@ teams_schema = TeamSchema(many=True)
 # In[ ]:
 
 
-@app.route("/user-create", methods=["POST"])
-def sign_up():
-    email = request.json['email']
-    password = request.json['password']
-    fullname = request.json['fullName']
-    confirmpassword = request.json['confirmPassword']
-
-    if(password == confirmpassword):
-        new_user = User(email, password, fullname)
-        db.session.add(new_user)
-        db.session.commit()
-        payload = eval(user_schema.dumps(User.query.get(email)).data)
-        encoded = jwt.encode(payload, 'secret', algorithm='HS256').decode("utf-8")
-        return json.dumps({"token":encoded})
-    else:
-        return "", 500
-
-@app.route("/user-get", methods=["POST"])
-def user_detail():
-    user = User.query.get(email)
-    return user_schema.jsonify(user)
-
-@app.route("/user-get-all", methods=["GET"])
-def get_user():
-    return jsonify(users_schema.dump(User.query.all()).data)
-
-@app.route("/role-update", methods=["POST"])
-def user_update():
-    req_data = request.json
-    email = req_data["email"]
-    user = User.query.get(email)
+class Prev(db.Model):
+    email = db.Column(db.String(250), primary_key=True)
+    rank = db.Column(db.INTEGER())
     
-    if(req_data["role"]):
-        user.role = req_data["role"]
+    def __init__(self, email, rank):
+        self.email = email
+        self.rank = rank
 
-    db.session.commit()
-    return user_schema.jsonify(user)
+class PrevSchema(ma.Schema):
+    class Meta:
+        fields = ('email', 'rank')
 
-@app.route("/user-delete", methods=["POST"])
-def user_delete():
-    user = User.query.get(request.json["email"])
-    db.session.delete(user)
-    db.session.commit()
-    return user_schema.jsonify(user)
+prev_schema = PrevSchema()
+prevs_schema = PrevSchema(many=True)
 
-@app.route("/teams-get-nhl")
-def get_nhl_teams():
-    return jsonify(teams_schema.dump(Team.query.filter_by(division="NHL")).data)
 
-@app.route("/teams-get-nba")
-def get_nba_teams():
-    return jsonify(teams_schema.dump(Team.query.filter_by(division="NBA")).data)
+# In[ ]:
+
 
 @app.route("/teams-get")
 def get_teams():
     return jsonify(teams_schema.dump(Team.query).data)
+
+@app.route("/teams-update")
+def update_teams():
+    nhl = insert_nhl_teams()
+    nba = insert_nba_teams()
+    return "NHL: {} updated, NBA: {} updated".format(nhl, nba)
 
 @app.route("/match", methods=["POST"])
 def run_matching():
@@ -189,70 +134,30 @@ def run_matching():
     capacity = req_data[1]
     
     data = pd.DataFrame.from_dict(responses, orient="index")
-    prev_rankings = pd.DataFrame(np.random.randint(0, 4, data.shape), index=data.index)
+    
+    temp = {}
+    for o in prevs_schema.dump(Prev.query).data:
+        temp[o["email"]] = o["rank"]
+    for email in data.index:
+        if email not in temp:
+            temp[email] = 1
+            db.session.add(Prev(email, 1))
+    db.session.commit()
+    prev_rankings = pd.DataFrame.from_dict(temp, orient="index")
     
     bo = BO(data, capacity, prev_rankings)
     bo.optimize()
     
-    return jsonify(bo.sol)
-
-@app.route("/team-create", methods=["POST"])
-def team_create():
-    req_data = request.json
-    team = Team("", "", "")
-    if(req_data["division"]):
-        team.division = req_data["division"]
-    if(req_data["logo"]):
-        team.logo = req_data["logo"]
-    if(req_data["name"]):
-        team.name = req_data["name"]
-        
-    db.session.add(team)
+    x_star = bo.x_star
+    ranks = x_star.argmax(axis=1) + 1
+    ranks[(x_star.sum(axis=1) < 1)] = 0
+    solranks = dict(zip(bo.data.index, ranks))
+    for k in solranks:
+        p = Prev.query.get(k)
+        p.rank = int(solranks[k])
     db.session.commit()
-    return team_schema.jsonify(team)
-
-@app.route("/team-update", methods=["POST"])
-def team_update():
-    req_data = request.json
-    team_id = req_data["team_id"]
-    team = Team.query.get(team_id)
     
-    team.show = req_data["show"]
-    if(req_data["date"]):
-        team.date = dt.strptime(req_data["date"], '%Y-%m-%d').date()
-    if(req_data["division"]):
-        team.division = req_data["division"]
-    if(req_data["logo"]):
-        team.logo = req_data["logo"]
-    if(req_data["name"]):
-        team.name = req_data["name"]
-
-    db.session.commit()
-    return team_schema.jsonify(team)
-
-@app.route("/team-delete", methods=["POST"])
-def team_delete():
-    team = Team.query.get(request.json["team_id"])
-    db.session.delete(team)
-    db.session.commit()
-    return team_schema.jsonify(team)
-
-
-@app.route("/login", methods=["POST"])
-def authenticate():
-    req_data = request.json
-    email = req_data["email"]
-    password = req_data["password"]
-    user = User.query.get(email)
-    if(user):
-        if(user.password == password):
-            payload = eval(user_schema.dumps(user).data)
-            encoded = jwt.encode(payload, 'secret', algorithm='HS256').decode("utf-8")
-            return json.dumps({"token":encoded})
-        else:
-            return "", 500
-    else:
-        return "", 500
+    return jsonify(bo.sol)
 
 @app.route("/shutdown")
 def shutdown():
