@@ -48,8 +48,8 @@ def U_joint(X, U, K):
     
     return k1*u1(x1) + k2*u2(x2) + k3*u3(x3) + k*k1*k2*u1(x1)*u2(x2) + k*k1*k3*u1(x1)*u3(x3) + k*k2*k3*u2(x2)*u3(x3) + (k*k)*k1*k2*k3*u1(x1)*u2(x2)*u3(x3)
 
-def U_init(self):
-    data = self.data
+def U_init(model):
+    data = model.data
     utilities = {
         "ec":{"best":0, "worst":len(data)},
         "r1":{"best":len(data), "worst":0},

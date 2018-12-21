@@ -71,7 +71,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'da
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
-http_server = WSGIServer(('', 2000), app)
+http_server = WSGIServer(('127.0.0.1', 2000), app)
 
 
 # In[ ]:
@@ -135,13 +135,17 @@ def run_matching():
     
     data = pd.DataFrame.from_dict(responses, orient="index")
     
-    temp = {}
+    prev_table = {}
     for o in prevs_schema.dump(Prev.query).data:
-        temp[o["email"]] = o["rank"]
+        prev_table[o["email"]] = o["rank"]
+    
+    temp = {}
     for email in data.index:
-        if email not in temp:
+        if email not in prev_table:
             temp[email] = 1
             db.session.add(Prev(email, 1))
+        else:
+            temp[email] = prev_table[email]
     db.session.commit()
     prev_rankings = pd.DataFrame.from_dict(temp, orient="index")
     
