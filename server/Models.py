@@ -210,7 +210,7 @@ class BO():
     
     def optimize(self):
         dimensions = [(0.01,0.99), (0.01,0.99), (0.01,0.99)]
-        gp_minimize(self.run, dimensions, n_calls=50, noise=1e-10, acq_func="EI")
+        gp_minimize(self.run, dimensions, n_calls=50, noise=1e-5, acq_func="EI")
 
 
 # In[ ]:
@@ -272,13 +272,27 @@ class GRID():
 # In[ ]:
 
 
-#bo = BO(data, ticket_capacity, prev_rankings)
-#bo.optimize()
+# Verify BO output noise variance
+#ei = prev_rankings.iloc[:, -1].values.flatten()
+#ei = np.array(((ei == 0) | (ei == 3)), dtype=np.float64)
+#n, m = data.shape
+#c1 = np.kron(ei, np.array([1,1,0]))
+#c2 = np.kron(np.ones(n), np.array([1,0,0]))
+#c3 = np.kron(np.ones(n), np.array([1,1,1]))
+#l = []
+#for i in range(0,10):
+#    epsilon = np.random.normal(0, 0.001, size=(data.shape)).flatten()
+#    c = c1 + c2 + c3 + epsilon
+#    bo = BO(data, ticket_capacity, prev_rankings)
+#    a, x = ip(data, ticket_capacity, c)
+#    U, K, priority = U_init(bo)
+#    l.append(U_eval(x, bo)[0])
+#np.std(np.array(l))**2
 
 
 # In[ ]:
 
 
-#grid = GRID(data, ticket_capacity, prev_rankings)
-#grid.optimize()
+#bo = BO(data, ticket_capacity, prev_rankings)
+#bo.optimize()
 
