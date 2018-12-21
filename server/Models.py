@@ -174,7 +174,6 @@ class BO():
         
         self.data = data
         self.ticket_capacity = ticket_capacity
-        self.prev_rankings = prev_rankings
         self.U, self.K, self.priority = U_init(self)
         
         ei = prev_rankings.iloc[:, -1].values.flatten()
@@ -229,7 +228,6 @@ class GRID():
         
         self.data = data
         self.ticket_capacity = ticket_capacity
-        self.prev_rankings = prev_rankings
         self.U, self.K, self.priority = U_init(self)
         
         ei = prev_rankings.iloc[:, -1].values.flatten()
