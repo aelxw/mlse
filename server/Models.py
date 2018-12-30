@@ -4,13 +4,12 @@
 # In[ ]:
 
 
+import numpy as np
 import pandas as pd
 pd.options.display.max_rows = None
-import numpy as np
 import cvxpy as cvx
-from functools import partial
 from matplotlib import pyplot as plt
-from skopt import gp_minimize
+from skopt import gp_minimize, forest_minimize, gbrt_minimize
 
 
 # In[ ]:
@@ -22,22 +21,29 @@ def read_data(filename):
     data = data.set_index("id")
     return data
 
-def U_linear(limits):
-    B = limits["best"]
-    A = limits["worst"]
-    return lambda y: ((1/(B-A))*y-(A/(B-A)))
-
 def newton_k(x, k1, k2, k3):
     y = x - ((1+k1*x)*(1+k2*x)*(1+k3*x)-(1+x))/(3*(k1*k2*k3)*(x*x)+2*(k1*k2+k1*k3+k2*k3)*x+(k1+k2+k3-1))
     if np.abs(y-x) <= 0.00001:
         return y
     else:
         return newton_k(y, k1, k2, k3)
-
-def U_joint(X, U, K):
-    u1 = U[0]
-    u2 = U[1]
-    u3 = U[2]
+    
+def U_init(data):
+    priority = ["ec", "r1", "unmatched"]
+    k1, k2, k3 = [0.7, 0.6, 0.55]
+    k = newton_k(-2, k1, k2, k3) if (k1+k2+k3) > 1 else newton_k(2, k1, k2, k3)
+    K = [k1, k2, k3, k]
+    return priority, K
+    
+def u1(x):
+    return 1-1/200*x
+def u2(x):
+    return 1/200*x
+def u3(x):
+    return 1-1/200*x
+    
+def U_joint(X, K):
+    
     k1 = K[0]
     k2 = K[1]
     k3 = K[2]
@@ -48,26 +54,8 @@ def U_joint(X, U, K):
     
     return k1*u1(x1) + k2*u2(x2) + k3*u3(x3) + k*k1*k2*u1(x1)*u2(x2) + k*k1*k3*u1(x1)*u3(x3) + k*k2*k3*u2(x2)*u3(x3) + (k*k)*k1*k2*k3*u1(x1)*u2(x2)*u3(x3)
 
-def U_init(model):
-    data = model.data
-    utilities = {
-        "ec":{"best":0, "worst":len(data)},
-        "r1":{"best":len(data), "worst":0},
-        "unmatched":{"best":0, "worst":len(data)}
-    }
-    
-    priority = ["ec", "r1", "unmatched"]
-    k1, k2, k3 = [0.7, 0.6, 0.55]
-    
-    k = newton_k(-2, k1, k2, k3) if (k1+k2+k3) > 1 else newton_k(2, k1, k2, k3)
-
-    U = [U_linear(utilities[x]) for x in priority]
-    K = [k1, k2, k3, k]
-    return U, K, priority
-
 def U_eval(x_star, model):
     ei = model.ei
-    U = model.U
     K = model.K
     priority = model.priority
     
@@ -79,7 +67,7 @@ def U_eval(x_star, model):
     ec = ei.T.dot(X.dot(np.eye(1,m,2).T)+(np.ones((n,1))-X.dot(np.ones((m,1))))).ravel()[0]
     
     vals = pd.Series({"r1":r1, "unmatched":unmatched, "ec":ec}).loc[priority].values.reshape(-1,3)
-    score = U_joint(vals, U, K)[0]
+    score = U_joint(vals, K)[0]
     return score, vals
 
 
@@ -171,14 +159,14 @@ class BO():
         self.sol = {}
         self.x_star = {}
         self.solsummary = None
-        
+
         self.data = data
         self.ticket_capacity = ticket_capacity
-        self.U, self.K, self.priority = U_init(self)
-        
+        self.priority, self.K = U_init(data)
+
         ei = prev_rankings.iloc[:, -1].values.flatten()
         self.ei = np.array(((ei == 0) | (ei == 3)), dtype=np.float64)
-        
+
         n, m = data.shape
         attrs = {
             "r1":np.kron(np.ones(n), np.array([1,0,0])),
@@ -188,13 +176,17 @@ class BO():
         self.c1 = attrs[self.priority[0]]
         self.c2 = attrs[self.priority[1]]
         self.c3 = attrs[self.priority[2]]
-        
+
     def run(self, w):
-            
-        epsilon = np.random.normal(0, 0.001, size=(self.data.shape)).flatten()
+
+        data = self.data
+        ticket_capacity = self.ticket_capacity
+        priority = self.priority
+
+        epsilon = np.random.normal(0, 0.001, size=(data.shape)).flatten()
         c = w[0]*self.c1 + w[1]*self.c2 + w[2]*self.c3 + epsilon
 
-        m_employees, x_star = ip(self.data, self.ticket_capacity, c)
+        m_employees, x_star = ip(data, ticket_capacity, c)
 
         score, vals = U_eval(x_star, self)
 
@@ -204,58 +196,20 @@ class BO():
             self.bestc = c
             self.sol = m_employees
             self.x_star = x_star
-            self.solsummary = pd.DataFrame(np.hstack((vals.flatten(), score)).reshape(1,-1), columns=self.priority + ["score"])
-        
+            self.solsummary = pd.DataFrame(np.hstack((vals.flatten(), score)).reshape(1,-1), columns=priority + ["score"])
+
         return -score
-    
+
     def optimize(self):
+
         dimensions = [(0.01,0.99), (0.01,0.99), (0.01,0.99)]
-        gp_minimize(self.run, dimensions, n_calls=50, noise=1e-5, acq_func="EI")
-
-
-# In[ ]:
-
-
-class GRID():
-    
-    def __init__(self, data, ticket_capacity, prev_rankings):
         
-        self.bestscore = 0
-        self.bestc = np.array([])
-        self.sol = {}
-        self.x_star = {}
-        self.solsummary = None
-        
-        self.data = data
-        self.ticket_capacity = ticket_capacity
-        self.U, self.K, self.priority = U_init(self)
-        
-        ei = prev_rankings.iloc[:, -1].values.flatten()
-        self.ei = np.array(((ei == 0) | (ei == 3)), dtype=np.float64)
-        
-    def run(self, loc):
-        
-        scale = [0.001, 0.005, 0.005]
-        c = np.abs(np.random.normal(loc=loc, scale=scale, size=self.data.shape)).flatten()
-        m_employees, x_star = ip(self.data, self.ticket_capacity, c)
-        
-        score, vals = U_eval(x_star, self)
-        
-        if score > self.bestscore:
-            print(score, vals)
-            self.bestscore = score
-            self.bestc = c
-            self.sol = m_employees
-            self.x_star = x_star
-            self.solsummary = pd.DataFrame(np.hstack((vals.flatten(), score)).reshape(1,-1), columns=self.priority + ["score"])
-    
-    def optimize(self):
-        for a in np.linspace(0, 0.8, 15):
-            for b in np.linspace(0, 0.8, 15):
-                if a > b:
-                    loc = [1,a,b]
-                    for trail in range(0, 5):
-                        self.run(loc)
+        print("Forest")
+        forest_minimize(self.run, dimensions, n_calls=10, acq_func="EI")
+        print("Gradient Boosted Regression Trees")
+        gbrt_minimize(self.run, dimensions, n_calls=10, acq_func="EI")
+        print("Gaussian Processes")
+        gp_minimize(self.run, dimensions, n_calls=10, acq_func="EI", noise=1e-5)
 
 
 # In[ ]:
@@ -267,27 +221,6 @@ class GRID():
 #ticket_capacity = {}
 #for t in tickets:
 #    ticket_capacity[t] = 22
-
-
-# In[ ]:
-
-
-# Verify BO output noise variance
-#ei = prev_rankings.iloc[:, -1].values.flatten()
-#ei = np.array(((ei == 0) | (ei == 3)), dtype=np.float64)
-#n, m = data.shape
-#c1 = np.kron(ei, np.array([1,1,0]))
-#c2 = np.kron(np.ones(n), np.array([1,0,0]))
-#c3 = np.kron(np.ones(n), np.array([1,1,1]))
-#l = []
-#for i in range(0,10):
-#    epsilon = np.random.normal(0, 0.001, size=(data.shape)).flatten()
-#    c = c1 + c2 + c3 + epsilon
-#    bo = BO(data, ticket_capacity, prev_rankings)
-#    a, x = ip(data, ticket_capacity, c)
-#    U, K, priority = U_init(bo)
-#    l.append(U_eval(x, bo)[0])
-#np.std(np.array(l))**2
 
 
 # In[ ]:

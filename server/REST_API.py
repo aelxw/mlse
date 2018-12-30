@@ -18,7 +18,7 @@ import os
 import datetime
 from datetime import datetime as dt
 
-from Models import BO, GRID
+from Models import BO
 
 
 # In[ ]:
@@ -131,7 +131,7 @@ def update_teams():
 def run_matching():
     req_data = request.json
     responses = req_data[0]
-    capacity = req_data[1]
+    ticket_capacity = req_data[1]
     
     data = pd.DataFrame.from_dict(responses, orient="index")
     
@@ -149,7 +149,7 @@ def run_matching():
     db.session.commit()
     prev_rankings = pd.DataFrame.from_dict(temp, orient="index")
     
-    bo = BO(data, capacity, prev_rankings)
+    bo = BO(data, ticket_capacity, prev_rankings)
     bo.optimize()
     
     x_star = bo.x_star
