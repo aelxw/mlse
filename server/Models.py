@@ -1,9 +1,11 @@
 
 # coding: utf-8
 
-# In[1]:
+# In[ ]:
 
 
+from warnings import filterwarnings
+filterwarnings("ignore")
 import numpy as np
 import pandas as pd
 pd.options.display.max_rows = None
@@ -13,7 +15,7 @@ from skopt import gp_minimize, forest_minimize, gbrt_minimize
 import time
 
 
-# In[2]:
+# In[ ]:
 
 
 def read_data(filename):
@@ -31,20 +33,22 @@ def newton_k(x, k1, k2, k3):
     
 def U_init(data):
     priority = ["ec", "r1", "unmatched"]
+    n = len(data)
+    U = [
+        lambda x: 1-1/n*x,
+        lambda x: 1/n*x,
+        lambda x: 1-1/n*x
+    ]
     k1, k2, k3 = [0.7, 0.6, 0.55]
     k = newton_k(-2, k1, k2, k3) if (k1+k2+k3) > 1 else newton_k(2, k1, k2, k3)
     K = [k1, k2, k3, k]
-    return priority, K
+    return priority, U, K
     
-def u1(x):
-    return 1-1/200*x
-def u2(x):
-    return 1/200*x
-def u3(x):
-    return 1-1/200*x
+def U_joint(X, U, K):
     
-def U_joint(X, K):
-    
+    u1 = U[0]
+    u2 = U[1]
+    u3 = U[2]
     k1 = K[0]
     k2 = K[1]
     k3 = K[2]
@@ -57,6 +61,7 @@ def U_joint(X, K):
 
 def U_eval(x_star, model):
     ei = model.ei
+    U = model.U
     K = model.K
     priority = model.priority
     
@@ -68,11 +73,11 @@ def U_eval(x_star, model):
     ec = ei.T.dot(X.dot(np.eye(1,m,2).T)+(np.ones((n,1))-X.dot(np.ones((m,1))))).ravel()[0]
     
     vals = pd.Series({"r1":r1, "unmatched":unmatched, "ec":ec}).loc[priority].values.reshape(-1,3)
-    score = U_joint(vals, K)[0]
+    score = U_joint(vals, U, K)[0]
     return score, vals
 
 
-# In[3]:
+# In[ ]:
 
 
 # Integer programming
@@ -148,7 +153,7 @@ def ip(r_employees, ticket_capacity, c):
         return {}, None
 
 
-# In[16]:
+# In[ ]:
 
 
 class BO():
@@ -163,7 +168,7 @@ class BO():
 
         self.data = data
         self.ticket_capacity = ticket_capacity
-        self.priority, self.K = U_init(data)
+        self.priority, self.U, self.K = U_init(data)
 
         ei = prev_rankings.iloc[:, -1].values.flatten()
         self.ei = np.array(((ei == 0) | (ei == 3)), dtype=np.float64)
@@ -213,26 +218,26 @@ class BO():
         x0.extend(res.x_iters)
         y0.extend(res.func_vals.tolist())
         
-        print("Gaussian Processes")
-        res = gp_minimize(self.run, dimensions, n_calls=15, acq_func="EI", n_points=50000, noise=1e-5, x0=x0, y0=y0)
+        print("Gradient Boosted Regression Trees")
+        res = gbrt_minimize(self.run, dimensions, n_calls=15, acq_func="EI", n_points=50000, x0=x0, y0=y0)
         x0.extend(res.x_iters)
         y0.extend(res.func_vals.tolist())
         
-        print("Gradient Boosted Regression Trees")
-        res = gbrt_minimize(self.run, dimensions, n_calls=15, acq_func="EI", n_points=50000, x0=x0, y0=y0)
+        print("Gaussian Processes")
+        res = gp_minimize(self.run, dimensions, n_calls=15, acq_func="EI", n_points=50000, noise=1e-5, x0=x0, y0=y0)
+        
         
 
 
-# In[23]:
+# In[ ]:
 
 
 #data = read_data("data1.csv")
-#prev_rankings = pd.DataFrame(np.random.randint(0, 4, data.shape), index=data.index)
+#rev_rankings = pd.DataFrame(np.random.randint(0, 4, data.shape), index=data.index)
 #tickets = sorted(data.unstack().dropna().unique().tolist())
 #ticket_capacity = {}
 #for t in tickets:
 #    ticket_capacity[t] = 22
-
 #bo = BO(data, ticket_capacity, prev_rankings)
 #bo.optimize()
 
