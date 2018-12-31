@@ -4,6 +4,8 @@
 # In[ ]:
 
 
+from warnings import filterwarnings
+filterwarnings("ignore")
 from flask import Flask, json, request, jsonify
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
