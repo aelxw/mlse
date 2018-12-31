@@ -204,12 +204,13 @@ class BO():
 
         dimensions = [(0.01,0.99), (0.01,0.99), (0.01,0.99)]
         
-        print("Forest")
-        forest_minimize(self.run, dimensions, n_calls=10, acq_func="EI")
-        print("Gradient Boosted Regression Trees")
-        gbrt_minimize(self.run, dimensions, n_calls=10, acq_func="EI")
         print("Gaussian Processes")
-        gp_minimize(self.run, dimensions, n_calls=10, acq_func="EI", noise=1e-5)
+        gp_minimize(self.run, dimensions, n_calls=10, acq_func="EI", n_points=100000, noise=1e-5)
+        print("Forest")
+        forest_minimize(self.run, dimensions, n_calls=10, acq_func="EI", n_points=100000)
+        print("Gradient Boosted Regression Trees")
+        gbrt_minimize(self.run, dimensions, n_calls=10, acq_func="EI", n_points=100000)
+        
 
 
 # In[ ]:
