@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[ ]:
+# In[1]:
 
 
 import numpy as np
@@ -10,9 +10,10 @@ pd.options.display.max_rows = None
 import cvxpy as cvx
 from matplotlib import pyplot as plt
 from skopt import gp_minimize, forest_minimize, gbrt_minimize
+import time
 
 
-# In[ ]:
+# In[2]:
 
 
 def read_data(filename):
@@ -71,7 +72,7 @@ def U_eval(x_star, model):
     return score, vals
 
 
-# In[ ]:
+# In[3]:
 
 
 # Integer programming
@@ -147,7 +148,7 @@ def ip(r_employees, ticket_capacity, c):
         return {}, None
 
 
-# In[ ]:
+# In[16]:
 
 
 class BO():
@@ -190,7 +191,7 @@ class BO():
 
         score, vals = U_eval(x_star, self)
 
-        if score > self.bestscore:
+        if score >= self.bestscore:
             print(score, vals)
             self.bestscore = score
             self.bestc = c
@@ -204,16 +205,25 @@ class BO():
 
         dimensions = [(0.01,0.99), (0.01,0.99), (0.01,0.99)]
         
-        print("Gaussian Processes")
-        gp_minimize(self.run, dimensions, n_calls=10, acq_func="EI", n_points=100000, noise=1e-5)
+        x0 = []
+        y0 = []
+        
         print("Forest")
-        forest_minimize(self.run, dimensions, n_calls=10, acq_func="EI", n_points=100000)
+        res = forest_minimize(self.run, dimensions, n_calls=15, acq_func="EI", n_points=50000)
+        x0.extend(res.x_iters)
+        y0.extend(res.func_vals.tolist())
+        
+        print("Gaussian Processes")
+        res = gp_minimize(self.run, dimensions, n_calls=15, acq_func="EI", n_points=50000, noise=1e-5, x0=x0, y0=y0)
+        x0.extend(res.x_iters)
+        y0.extend(res.func_vals.tolist())
+        
         print("Gradient Boosted Regression Trees")
-        gbrt_minimize(self.run, dimensions, n_calls=10, acq_func="EI", n_points=100000)
+        res = gbrt_minimize(self.run, dimensions, n_calls=15, acq_func="EI", n_points=50000, x0=x0, y0=y0)
         
 
 
-# In[ ]:
+# In[23]:
 
 
 #data = read_data("data1.csv")
@@ -222,10 +232,6 @@ class BO():
 #ticket_capacity = {}
 #for t in tickets:
 #    ticket_capacity[t] = 22
-
-
-# In[ ]:
-
 
 #bo = BO(data, ticket_capacity, prev_rankings)
 #bo.optimize()
