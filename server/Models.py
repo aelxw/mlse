@@ -12,7 +12,10 @@ pd.options.display.max_rows = None
 import cvxpy as cvx
 from matplotlib import pyplot as plt
 from skopt import gp_minimize, forest_minimize, gbrt_minimize
-import time
+from scipy import sparse
+
+import sys
+import traceback
 
 
 # In[ ]:
@@ -104,7 +107,7 @@ def ip(r_employees, ticket_capacity, c):
     # Constraints
 
     # Each employee gets <= 1 ticket
-    A1 = np.kron(np.eye(n_employees), np.ones(n_t))
+    A1 = sparse.kron(sparse.eye(n_employees), np.ones(n_t))
     b1 = np.ones((A1.shape[0],1))
 
     # <= ticket capacity
@@ -114,11 +117,11 @@ def ip(r_employees, ticket_capacity, c):
         temp = r.apply(lambda x: x.map({t:1})).fillna(0).values.reshape(1,-1)
         rows.append(temp)
         b2.append(ticket_capacity[t])
-    A2 = np.vstack(rows)
+    A2 = sparse.bsr_matrix(np.vstack(rows))
     b2 = np.array(b2).reshape(-1,1)
     
     # Unvoted
-    A3 = np.array(r.isnull().values.flatten(), np.float64)
+    A3 = sparse.bsr_matrix(np.array(r.isnull().values.flatten(), np.float64))
     b3 = 0
     
     A = np.vstack((A1, A2, A3))
@@ -132,7 +135,6 @@ def ip(r_employees, ticket_capacity, c):
     ]
 
     # Objective function
-    c[A3 > 0] = 0
     obj = cvx.Maximize(c*x)
 
     # Solve
@@ -191,40 +193,47 @@ class BO():
 
         epsilon = np.random.normal(0, 0.001, size=(data.shape)).flatten()
         c = w[0]*self.c1 + w[1]*self.c2 + w[2]*self.c3 + epsilon
-
-        m_employees, x_star = ip(data, ticket_capacity, c)
-
-        score, vals = U_eval(x_star, self)
-
-        if score >= self.bestscore:
-            print(score, vals)
-            self.bestscore = score
-            self.bestc = c
-            self.sol = m_employees
-            self.x_star = x_star
-            self.solsummary = pd.DataFrame(np.hstack((vals.flatten(), score)).reshape(1,-1), columns=priority + ["score"])
-
-        return -score
+        
+        try:
+            m_employees, x_star = ip(data, ticket_capacity, c)
+            score, vals = U_eval(x_star, self)
+            if score >= self.bestscore:
+                print(score, vals)
+                self.bestscore = score
+                self.bestc = c
+                self.sol = m_employees
+                self.x_star = x_star
+                self.solsummary = pd.DataFrame(np.hstack((vals.flatten(), score)).reshape(1,-1), columns=priority + ["score"])
+            return -score
+        
+        except:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            traceback.print_tb(exc_traceback)
+            pass
 
     def optimize(self):
-
-        dimensions = [(0.01,0.99), (0.01,0.99), (0.01,0.99)]
         
+        dimensions = [(0.01,0.99), (0.01,0.99), (0.01,0.99)]
         x0 = []
         y0 = []
         
-        print("Forest")
-        res = forest_minimize(self.run, dimensions, n_calls=15, acq_func="EI", n_points=50000)
-        x0.extend(res.x_iters)
-        y0.extend(res.func_vals.tolist())
-        
-        print("Gradient Boosted Regression Trees")
-        res = gbrt_minimize(self.run, dimensions, n_calls=15, acq_func="EI", n_points=50000, x0=x0, y0=y0)
-        x0.extend(res.x_iters)
-        y0.extend(res.func_vals.tolist())
-        
-        print("Gaussian Processes")
-        res = gp_minimize(self.run, dimensions, n_calls=15, acq_func="EI", n_points=50000, noise=1e-5, x0=x0, y0=y0)
+        try:
+            print("Gaussian Processes")
+            res = gp_minimize(self.run, dimensions, n_calls=15, acq_func="EI", n_points=50000, noise=1e-5)
+            x0.extend(res.x_iters)
+            y0.extend(res.func_vals.tolist())
+
+            print("Forest")
+            res = forest_minimize(self.run, dimensions, n_calls=15, acq_func="EI", n_points=50000, x0=x0, y0=y0)
+            x0.extend(res.x_iters)
+            y0.extend(res.func_vals.tolist())
+            
+            print("Gradient Boosted Regression Trees")
+            res = gbrt_minimize(self.run, dimensions, n_calls=15, acq_func="EI", n_points=50000, x0=x0, y0=y0)
+
+            
+        except:
+            pass
         
         
 
@@ -233,11 +242,16 @@ class BO():
 
 
 #data = read_data("data1.csv")
-#rev_rankings = pd.DataFrame(np.random.randint(0, 4, data.shape), index=data.index)
+#prev_rankings = pd.DataFrame(np.random.randint(0, 4, data.shape), index=data.index)
 #tickets = sorted(data.unstack().dropna().unique().tolist())
 #ticket_capacity = {}
 #for t in tickets:
-#    ticket_capacity[t] = 22
+#    ticket_capacity[t] = 22*26
+
+
+# In[ ]:
+
+
 #bo = BO(data, ticket_capacity, prev_rankings)
 #bo.optimize()
 
