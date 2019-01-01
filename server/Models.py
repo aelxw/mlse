@@ -8,7 +8,7 @@ from warnings import filterwarnings
 filterwarnings("ignore")
 import numpy as np
 import pandas as pd
-pd.options.display.max_rows = None
+pd.options.display.max_rows = 7
 import cvxpy as cvx
 from matplotlib import pyplot as plt
 from skopt import gp_minimize, forest_minimize, gbrt_minimize
@@ -218,13 +218,14 @@ class BO():
         y0 = []
         
         try:
-            print("Gaussian Processes")
-            res = gp_minimize(self.run, dimensions, n_calls=15, acq_func="EI", n_points=50000, noise=1e-5)
+            
+            print("Forest")
+            res = forest_minimize(self.run, dimensions, n_calls=15, acq_func="EI", n_points=50000)
             x0.extend(res.x_iters)
             y0.extend(res.func_vals.tolist())
-
-            print("Forest")
-            res = forest_minimize(self.run, dimensions, n_calls=15, acq_func="EI", n_points=50000, x0=x0, y0=y0)
+            
+            print("Gaussian Processes")
+            res = gp_minimize(self.run, dimensions, n_calls=15, acq_func="EI", n_points=50000, x0=x0, y0=y0, noise=1e-5)
             x0.extend(res.x_iters)
             y0.extend(res.func_vals.tolist())
             
@@ -246,7 +247,7 @@ class BO():
 #tickets = sorted(data.unstack().dropna().unique().tolist())
 #ticket_capacity = {}
 #for t in tickets:
-#    ticket_capacity[t] = 22*26
+#    ticket_capacity[t] = 22*28
 
 
 # In[ ]:
@@ -254,4 +255,50 @@ class BO():
 
 #bo = BO(data, ticket_capacity, prev_rankings)
 #bo.optimize()
+
+
+# In[ ]:
+
+
+#ei = prev_rankings.iloc[:, -1].values.flatten()
+#ei = np.array(((ei == 0) | (ei == 3)), dtype=np.float64)
+#n, m = data.shape
+#c1 = np.kron(np.ones(n), np.array([1,0,0]))
+#c2 = np.kron(ei, np.array([1,1,0]))
+#c3 = np.kron(np.ones(n), np.array([1,1,1]))
+#print("IP objective function for Direct Optimization\n")
+#print("c1 (equity objective): ", c2)
+#print("c2 (rank1 objective): ", c1)
+#print("c3 (unmatched objective): ", c3)
+#c = 0.7*c1 + 0.6*c2 + 0.55*c3
+#print("c = 0.7*c1 + 0.6*c2 + 0.55*c3")
+#print("c: ", c)
+#print("\nc aggregated: ")
+#agg = pd.Series(c, name="coefficients").to_frame().assign(repeated=1).groupby("coefficients").sum()
+#display(agg)
+#print(
+#    """This is with {n_employees} employees, so {n_employees}*3 = {n_coefficients} coefficients.
+#There are only {n_distinct} distinct numbers in the objective function,
+#so those {n_distinct} numbers are repeated many times.
+#Hence the tie-breaking, so it takes a long time to solve."""
+#    .format(n_employees=len(data), n_coefficients=3*len(data), n_distinct=len(agg))
+#)
+#print("IP objective function for Indirect Optimization\n")
+#print("c1 (equity objective): ", c2)
+#print("c2 (rank1 objective): ", c1)
+#print("c3 (unmatched objective): ", c3)
+#epsilon = np.random.normal(0, 0.001, size=(data.shape)).flatten()
+#print("epsilon ~ Normal(0, 0.001)")
+#c = 0.7*c1 + 0.6*c2 + 0.55*c3 + epsilon
+#print("c = 0.7*c1 + 0.6*c2 + 0.55*c3 + epsilon")
+#print("c: ", c)
+#print("\nc aggregated: ")
+#agg = pd.Series(c, name="coefficients").to_frame().assign(repeated=1).groupby("coefficients").sum()
+#display(agg)
+#print(
+#    """This is with {n_employees} employees, so {n_employees}*3 = {n_coefficients} coefficients.
+#There are {n_distinct} distinct numbers in the objective function,
+#so no tie-breaking needs to occur. Therefore, it is much quicker to solve."""
+#    .format(n_employees=len(data), n_coefficients=3*len(data), n_distinct=len(agg))
+#)
 
