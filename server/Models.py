@@ -4,14 +4,11 @@
 # In[ ]:
 
 
-from warnings import filterwarnings
-filterwarnings("ignore")
 import numpy as np
 import pandas as pd
-pd.options.display.max_rows = 7
 import cvxpy as cvx
 from matplotlib import pyplot as plt
-from skopt import gp_minimize, forest_minimize, gbrt_minimize
+from skopt import gp_minimize, forest_minimize, gbrt_minimize, dummy_minimize
 from scipy import sparse
 
 import sys
@@ -34,15 +31,16 @@ def newton_k(x, k1, k2, k3):
     else:
         return newton_k(y, k1, k2, k3)
     
-def U_init(data):
+def U_init(model):
     priority = ["ec", "r1", "unmatched"]
-    n = len(data)
+    n = len(model.data)
+    qi = model.ei
     U = [
-        lambda x: 1-1/n*x,
+        lambda x: 1-1/qi.sum()*x,
         lambda x: 1/n*x,
         lambda x: 1-1/n*x
     ]
-    k1, k2, k3 = [0.7, 0.6, 0.55]
+    k1, k2, k3 = [0.7, 0.65, 0.6]
     k = newton_k(-2, k1, k2, k3) if (k1+k2+k3) > 1 else newton_k(2, k1, k2, k3)
     K = [k1, k2, k3, k]
     return priority, U, K
@@ -170,10 +168,10 @@ class BO():
 
         self.data = data
         self.ticket_capacity = ticket_capacity
-        self.priority, self.U, self.K = U_init(data)
-
         ei = prev_rankings.iloc[:, -1].values.flatten()
         self.ei = np.array(((ei == 0) | (ei == 3)), dtype=np.float64)
+        
+        self.priority, self.U, self.K = U_init(self)
 
         n, m = data.shape
         attrs = {
@@ -184,6 +182,8 @@ class BO():
         self.c1 = attrs[self.priority[0]]
         self.c2 = attrs[self.priority[1]]
         self.c3 = attrs[self.priority[2]]
+        
+        self.iter = 0
 
     def run(self, w):
 
@@ -197,6 +197,10 @@ class BO():
         try:
             m_employees, x_star = ip(data, ticket_capacity, c)
             score, vals = U_eval(x_star, self)
+            
+            self.iter = self.iter + 1
+            print("Iteration {}".format(self.iter))
+            
             if score >= self.bestscore:
                 print(score, vals)
                 self.bestscore = score
@@ -218,20 +222,7 @@ class BO():
         y0 = []
         
         try:
-            
-            print("Forest")
-            res = forest_minimize(self.run, dimensions, n_calls=15, acq_func="EI", n_points=50000)
-            x0.extend(res.x_iters)
-            y0.extend(res.func_vals.tolist())
-            
-            print("Gaussian Processes")
-            res = gp_minimize(self.run, dimensions, n_calls=15, acq_func="EI", n_points=50000, x0=x0, y0=y0, noise=1e-5)
-            x0.extend(res.x_iters)
-            y0.extend(res.func_vals.tolist())
-            
-            print("Gradient Boosted Regression Trees")
-            res = gbrt_minimize(self.run, dimensions, n_calls=15, acq_func="EI", n_points=50000, x0=x0, y0=y0)
-
+                gp_minimize(self.run, dimensions, n_calls=50, acq_func="EI", n_points=50000, noise=1e-5)
             
         except:
             pass
@@ -247,7 +238,7 @@ class BO():
 #tickets = sorted(data.unstack().dropna().unique().tolist())
 #ticket_capacity = {}
 #for t in tickets:
-#    ticket_capacity[t] = 22*28
+#    ticket_capacity[t] = 34
 
 
 # In[ ]:
@@ -255,50 +246,4 @@ class BO():
 
 #bo = BO(data, ticket_capacity, prev_rankings)
 #bo.optimize()
-
-
-# In[ ]:
-
-
-#ei = prev_rankings.iloc[:, -1].values.flatten()
-#ei = np.array(((ei == 0) | (ei == 3)), dtype=np.float64)
-#n, m = data.shape
-#c1 = np.kron(np.ones(n), np.array([1,0,0]))
-#c2 = np.kron(ei, np.array([1,1,0]))
-#c3 = np.kron(np.ones(n), np.array([1,1,1]))
-#print("IP objective function for Direct Optimization\n")
-#print("c1 (equity objective): ", c2)
-#print("c2 (rank1 objective): ", c1)
-#print("c3 (unmatched objective): ", c3)
-#c = 0.7*c1 + 0.6*c2 + 0.55*c3
-#print("c = 0.7*c1 + 0.6*c2 + 0.55*c3")
-#print("c: ", c)
-#print("\nc aggregated: ")
-#agg = pd.Series(c, name="coefficients").to_frame().assign(repeated=1).groupby("coefficients").sum()
-#display(agg)
-#print(
-#    """This is with {n_employees} employees, so {n_employees}*3 = {n_coefficients} coefficients.
-#There are only {n_distinct} distinct numbers in the objective function,
-#so those {n_distinct} numbers are repeated many times.
-#Hence the tie-breaking, so it takes a long time to solve."""
-#    .format(n_employees=len(data), n_coefficients=3*len(data), n_distinct=len(agg))
-#)
-#print("IP objective function for Indirect Optimization\n")
-#print("c1 (equity objective): ", c2)
-#print("c2 (rank1 objective): ", c1)
-#print("c3 (unmatched objective): ", c3)
-#epsilon = np.random.normal(0, 0.001, size=(data.shape)).flatten()
-#print("epsilon ~ Normal(0, 0.001)")
-#c = 0.7*c1 + 0.6*c2 + 0.55*c3 + epsilon
-#print("c = 0.7*c1 + 0.6*c2 + 0.55*c3 + epsilon")
-#print("c: ", c)
-#print("\nc aggregated: ")
-#agg = pd.Series(c, name="coefficients").to_frame().assign(repeated=1).groupby("coefficients").sum()
-#display(agg)
-#print(
-#    """This is with {n_employees} employees, so {n_employees}*3 = {n_coefficients} coefficients.
-#There are {n_distinct} distinct numbers in the objective function,
-#so no tie-breaking needs to occur. Therefore, it is much quicker to solve."""
-#    .format(n_employees=len(data), n_coefficients=3*len(data), n_distinct=len(agg))
-#)
 
