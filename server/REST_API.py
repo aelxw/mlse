@@ -100,15 +100,17 @@ teams_schema = TeamSchema(many=True)
 
 class Prev(db.Model):
     email = db.Column(db.String(250), primary_key=True)
+    division = db.Column(db.String(20), primary_key=True)
     rank = db.Column(db.INTEGER())
     
-    def __init__(self, email, rank):
+    def __init__(self, email, division, rank):
         self.email = email
+        self.division = division
         self.rank = rank
 
 class PrevSchema(ma.Schema):
     class Meta:
-        fields = ('email', 'rank')
+        fields = ('email', 'division', 'rank')
 
 prev_schema = PrevSchema()
 prevs_schema = PrevSchema(many=True)
@@ -132,18 +134,19 @@ def run_matching():
     req_data = request.json
     responses = req_data[0]
     ticket_capacity = req_data[1]
+    division = req_data[2]
     
     data = pd.DataFrame.from_dict(responses, orient="index")
     
     prev_table = {}
-    for o in prevs_schema.dump(Prev.query).data:
+    for o in prevs_schema.dump(Prev.query.filter_by(division=division)).data:
         prev_table[o["email"]] = o["rank"]
     
     temp = {}
     for email in data.index:
         if email not in prev_table:
             temp[email] = 1
-            db.session.add(Prev(email, 1))
+            db.session.add(Prev(email, division, 1))
         else:
             temp[email] = prev_table[email]
     db.session.commit()
@@ -157,7 +160,7 @@ def run_matching():
     ranks[(x_star.sum(axis=1) < 1)] = 0
     solranks = dict(zip(bo.data.index, ranks))
     for k in solranks:
-        p = Prev.query.get(k)
+        p = Prev.query.get((k, division))
         p.rank = int(solranks[k])
     db.session.commit()
     

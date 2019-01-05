@@ -36,7 +36,7 @@ def U_init(model):
     n = len(model.data)
     qi = model.ei
     U = [
-        lambda x: 1-1/qi.sum()*x,
+        lambda x: 1-1/qi.sum()*x if qi.sum() > 0 else np.ones(x.shape),
         lambda x: 1/n*x,
         lambda x: 1-1/n*x
     ]
