@@ -71,7 +71,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'da
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
-http_server = WSGIServer(('127.0.0.1', 2000), app)
+http_server = WSGIServer(('', 2000), app)
 
 
 # In[ ]:
