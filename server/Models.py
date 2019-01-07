@@ -143,9 +143,18 @@ def ip(r_employees, ticket_capacity, c):
     if problem.status == 'optimal':
         x_star = x.value.reshape(-1,n_t).round()
         r_m = r.where(x_star == 1)
+        
+        ranks = x_star.argmax(axis=1) + 1
+        ranks[(x_star.sum(axis=1) < 1)] = 0
+        solranks = dict(zip(r_m.index, ranks))
+        
         m_employees = {}
         for e in r_m.index:
-            m_employees[e] = r_m.loc[e].dropna().tolist()
+            match = r_m.loc[e].dropna().tolist()
+            m_employees[e] = {
+                "match": match[0] if len(match) > 0 else "",
+                "rank": str(solranks[e])
+            }
 
         return m_employees, x_star
     else:
@@ -219,11 +228,9 @@ class BO():
     def optimize(self):
         
         dimensions = [(0.01,0.99), (0.01,0.99), (0.01,0.99)]
-        x0 = []
-        y0 = []
         
         try:
-                gp_minimize(self.run, dimensions, n_calls=50, acq_func="EI", n_points=50000, noise=1e-10)
+            gp_minimize(self.run, dimensions, n_calls=50, acq_func="EI", n_points=50000, noise=1e-10)
             
         except:
             pass
@@ -234,7 +241,7 @@ class BO():
 # In[ ]:
 
 
-#data = read_data("data1.csv")
+#data = read_data("data2.csv")
 #prev_rankings = pd.DataFrame(np.random.randint(0, 4, data.shape), index=data.index)
 #tickets = sorted(data.unstack().dropna().unique().tolist())
 #ticket_capacity = {}

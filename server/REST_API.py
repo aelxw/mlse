@@ -155,21 +155,22 @@ def run_matching():
     bo = BO(data, ticket_capacity, prev_rankings)
     bo.optimize()
     
-    x_star = bo.x_star
-    ranks = x_star.argmax(axis=1) + 1
-    ranks[(x_star.sum(axis=1) < 1)] = 0
-    solranks = dict(zip(bo.data.index, ranks))
-    for k in solranks:
-        p = Prev.query.get((k, division))
-        p.rank = int(solranks[k])
-    db.session.commit()
-    
     return jsonify(bo.sol)
 
 @app.route("/shutdown")
 def shutdown():
     http_server.stop()
     return "Server shutting down..."
+
+
+# In[ ]:
+
+
+def editRank(sol, division):
+    for email in sol:
+        p = Prev.query.get((email, division))
+        p.rank = int(sol[email]["rank"])
+    db.session.commit()
 
 
 # In[ ]:
