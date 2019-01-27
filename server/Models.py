@@ -8,7 +8,12 @@ import numpy as np
 import pandas as pd
 import cvxpy as cvx
 from skopt import gp_minimize, forest_minimize, gbrt_minimize, dummy_minimize
+from skopt.plots import plot_objective, plot_convergence, plot_evaluations
 from scipy import sparse
+from matplotlib import pyplot as plt
+
+from warnings import filterwarnings
+filterwarnings("ignore")
 
 import sys
 import traceback
@@ -34,12 +39,15 @@ def U_init(model):
     priority = ["equity", "rank1", "unmatched"]
     k1, k2, k3 = [0.7, 0.65, 0.6]
     
-    n = len(model.data)
+    n, m = model.data.shape
     qi = model.qi
+    temp = n - np.array([x for x in model.ticket_capacity.values()]).sum()
+    u_min = temp if temp > 0 else 0
+    
     U = [
         lambda x: 1-1/qi.sum()*x if qi.sum() > 0 else np.ones(x.shape),
         lambda x: 1/n*x,
-        lambda x: 1-1/n*x
+        lambda x: 1-1/n*x #(x-u_min)
     ]
     k = newton_k(-2, k1, k2, k3) if (k1+k2+k3) > 1 else newton_k(2, k1, k2, k3)
     K = [k1, k2, k3, k]
@@ -138,7 +146,7 @@ def ip(r_employees, ticket_capacity, c):
     # Solve
 
     problem = cvx.Problem(obj, constraints)
-    problem.solve(solver=cvx.ECOS_BB, max_iters=500, mi_max_iters=10000)
+    problem.solve(solver=cvx.ECOS_BB, max_iters=500, mi_max_iters=100000)
 
     if problem.status == 'optimal':
         x_star = x.value.reshape(-1,n_t).round()
@@ -174,6 +182,7 @@ class BO():
         self.sol = {}
         self.x_star = {}
         self.solsummary = None
+        self.history = []
 
         self.data = data
         self.ticket_capacity = ticket_capacity
@@ -217,7 +226,11 @@ class BO():
                 self.bestc = c
                 self.sol = m_employees
                 self.x_star = x_star
-                self.solsummary = pd.DataFrame(np.hstack((vals.flatten(), score)).reshape(1,-1), columns=priority + ["score"])
+                
+                summary = pd.DataFrame(np.hstack((vals.flatten(), score)).reshape(1,-1),
+                                       columns=priority + ["utility"])
+                self.history.append(summary)
+                self.solsummary = summary
             return -score
         
         except:
@@ -227,26 +240,35 @@ class BO():
 
     def optimize(self):
         
-        dimensions = [(0.01,0.99), (0.01,0.99), (0.01,0.99)]
+        dimensions = [(0.0, 1.0), (0.0, 1.0), (0.0, 1.0)]
+        
+        def early_stop(res):
+            return (res.func_vals == res.fun).sum() >= 10
         
         try:
-            gp_minimize(self.run, dimensions, n_calls=50, acq_func="EI", n_points=50000, noise=1e-10)
+            self.gp_res = gp_minimize(self.run, dimensions, n_calls=100, acq_func="gp_hedge", n_points=50000, noise=1e-10, callback=early_stop)
             
         except:
             pass
-        
+    
+    def show_results(self):
+        if self.gp_res: 
+            plot_convergence(self.gp_res)
+            plot_objective(self.gp_res)
+            plot_evaluations(self.gp_res)
+            plt.show()
         
 
 
 # In[ ]:
 
 
-#data = read_data("data2.csv")
+#data = read_data("data1.csv")
 #prev_rankings = pd.DataFrame(np.random.randint(0, 4, data.shape), index=data.index)
 #tickets = sorted(data.unstack().dropna().unique().tolist())
 #ticket_capacity = {}
 #for t in tickets:
-#    ticket_capacity[t] = 34
+#    ticket_capacity[t] = 180
 
 
 # In[ ]:
