@@ -201,8 +201,6 @@ class BO():
         self.c2 = attrs[self.priority[1]]
         self.c3 = attrs[self.priority[2]]
         
-        self.epsilon = np.random.uniform(0, 0.001, size=(data.shape)).flatten()
-        
         self.iter = 0
 
     def run(self, w):
@@ -211,7 +209,8 @@ class BO():
         ticket_capacity = self.ticket_capacity
         priority = self.priority
         
-        c = w[0]*self.c1 + w[1]*self.c2 + w[2]*self.c3 + self.epsilon
+        epsilon = np.random.uniform(0, 0.001, size=(data.shape)).flatten()
+        c = w[0]*self.c1 + w[1]*self.c2 + w[2]*self.c3 + epsilon
         
         try:
             m_employees, x_star = ip(data, ticket_capacity, c)
@@ -246,7 +245,7 @@ class BO():
             return (res.func_vals == res.fun).sum() >= 10
         
         try:
-            self.gp_res = gp_minimize(self.run, dimensions, n_calls=100, acq_func="gp_hedge", n_points=50000, noise=1e-10, callback=early_stop)
+            self.gp_res = gp_minimize(self.run, dimensions, n_points=50000, callback=early_stop)
             
         except:
             pass
