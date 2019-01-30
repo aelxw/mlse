@@ -155,22 +155,25 @@ def run_matching():
     bo = BO(data, ticket_capacity, prev_rankings)
     bo.optimize()
     
+    print(bo.sol)
+    
     return jsonify(bo.sol)
+
+@app.route("/save-ranks", methods=["POST"])
+def saveRanks():
+    req_data = request.json
+    ranks = req_data["ranks"]
+    division = req_data["division"]
+    for email in ranks:
+        p = Prev.query.get((email, division))
+        p.rank = int(ranks[email])
+    db.session.commit()
+    return "Updated"
 
 @app.route("/shutdown")
 def shutdown():
     http_server.stop()
     return "Server shutting down..."
-
-
-# In[ ]:
-
-
-def editRank(sol, division):
-    for email in sol:
-        p = Prev.query.get((email, division))
-        p.rank = int(sol[email]["rank"])
-    db.session.commit()
 
 
 # In[ ]:

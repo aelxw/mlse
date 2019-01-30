@@ -156,12 +156,15 @@ def ip(r_employees, ticket_capacity, c):
         ranks[(x_star.sum(axis=1) < 1)] = 0
         solranks = dict(zip(r_m.index, ranks))
         
+        e_choices = dict(zip(r.index, r.where(r.notnull(), "").values.tolist()))
+        
         m_employees = {}
         for e in r_m.index:
             match = r_m.loc[e].dropna().tolist()
             m_employees[e] = {
                 "match": match[0] if len(match) > 0 else "",
-                "rank": str(solranks[e])
+                "rank": str(solranks[e]),
+                "choices": e_choices[e]
             }
 
         return m_employees, x_star
@@ -183,8 +186,13 @@ class BO():
         self.x_star = {}
         self.solsummary = None
         self.history = []
-
-        self.data = data
+        
+        missing = 3-data.shape[1]
+        while missing > 0:
+            data["r"+str(3-missing+1)] = None
+            missing -= 1
+        self.data = data.iloc[:, 0:3]
+        
         self.ticket_capacity = ticket_capacity
         qi = prev_rankings.iloc[:, -1].values.flatten()
         self.qi = np.array(((qi == 0) | (qi == 3)), dtype=np.float64)
@@ -273,6 +281,6 @@ class BO():
 # In[ ]:
 
 
-#bo = BO(data, ticket_capacity, prev_rankings)
+#bo = BO(d, ticket_capacity, prev_rankings)
 #bo.optimize()
 
