@@ -155,8 +155,6 @@ def run_matching():
     bo = BO(data, ticket_capacity, prev_rankings)
     bo.optimize()
     
-    print(bo.sol)
-    
     return jsonify(bo.sol)
 
 @app.route("/save-ranks", methods=["POST"])

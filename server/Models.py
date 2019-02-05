@@ -281,6 +281,6 @@ class BO():
 # In[ ]:
 
 
-#bo = BO(d, ticket_capacity, prev_rankings)
+#bo = BO(data, ticket_capacity, prev_rankings)
 #bo.optimize()
 
