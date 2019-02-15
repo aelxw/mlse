@@ -1,0 +1,595 @@
+<html lang="en" >
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Angular Material style sheet -->
+<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.8/angular-material.min.css">
+
+<!-- Angular Material requires Angular.js Libraries -->
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular-animate.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular-aria.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular-messages.min.js"></script>
+
+<!-- Angular Material Library -->
+<script src="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.8/angular-material.min.js"></script>
+
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+<style>
+.highlight {
+    font-weight: bold;
+    color: red;
+}
+
+md-tab-data{
+  position: relative;
+}
+
+</style>
+
+</head>
+<body ng-app="app" ng-controller="ctrl" ng-cloak>
+<!--
+Your HTML content here
+-->
+
+<md-tabs md-dynamic-height md-border-bottom md-center-tabs="true">
+
+
+
+
+
+
+
+
+
+<md-tab label="New wave">
+
+<div layout="row" layout-align="center" style="padding: 2rem 2rem;">
+
+<div layout="column">
+
+    <md-card style="padding: 1rem;">
+    
+        <md-card-title>
+            <md-input-container style="margin-bottom: 0;">
+                <label>Enter Wave Name</label>
+                <input ng-required="true" ng-model="newWave.title">
+            </md-input-container>
+        </md-card-title>
+    
+        <md-divider></md-divider>
+        
+        <md-card-content>
+
+        <md-input-container>
+        <label>Division</label>
+        <md-select ng-model="selectedDivision" ng-disabled="newWave.wave.length > 0" aria-label="SelectDivision">
+            <md-option ng-repeat="d in divisions" ng-value="d">
+                {{d}}
+            </md-option>
+        </md-select>
+        </md-input-container>
+        
+        <br>
+        
+        <md-autocomplete
+            md-selected-item="selectedTeam"
+            md-search-text="searchText"
+            md-no-cache="newWave.wave.length == 0"
+            md-items="team in queryTeams()"
+            md-item-text="team.name"
+            md-min-length="0"
+            placeholder="Enter team name"
+            md-autoselect=true>
+            <md-item-template>
+                <div layout="row">
+                    <img style="height: 3rem; padding-right:1rem" ng-src="{{team.logo}}">
+                    <span md-highlight-text="searchText" md-highlight-flags="gi">{{team.name}}</span>
+                </div>
+            </md-item-template>
+            <md-not-found>
+                No team found.
+            </md-not-found>
+        </md-autocomplete>
+        
+        <br>
+        
+        <md-input-container style="margin-bottom: 0; padding-right: 1rem">
+            <md-datepicker ng-model="date" md-placeholder="Enter date" md-open-on-focus></md-datepicker>
+        </md-input-container>
+        
+        <md-input-container style="margin-bottom: 0;">
+            <label>Taxable benefit</label>
+            <input ng-required="true" ng-model="tax" type="number">
+        </md-input-container>
+        
+        </md-card-content>
+        
+        <md-card-footer>
+        
+        <md-button class="md-raised md-primary"
+            ng-click="addTeam()" 
+            ng-disabled="!addEnabled()" 
+            style="width: 100%; margin:0">
+            Add
+        </md-button>
+        
+        <br><br>
+        
+        <div ng-if="creatingSuccess && newWave.wave.length == 0">
+        <form action="{{formUrl | trusted}}" target="_blank">
+            <md-button style="padding: 0 2rem 0; width: 100%; margin:0" type="submit" class="md-raised md-primary">
+                See Wave
+            </md-button>
+        </form>
+        </div>
+        
+        </md-card-footer>
+            
+    </md-card>
+    
+    <br>
+    
+    
+    <md-card style="padding: 1rem" ng-if="newWave.wave.length > 0">
+    
+    <md-card-content>
+    
+    <table>
+        <tr ng-repeat="obj in newWave.wave">
+            <td style="padding:5px">
+                {{obj.team}}
+            </td>
+            <td style="padding:5px">
+                {{obj.date}}
+            </td>
+            <td style="padding:5px">
+                {{obj.tax | currency}}
+            </td>
+            <td style="padding:5px">
+                <md-tooltip md-direction="right">Remove</md-tooltip>
+                <i class="material-icons" style="cursor: pointer" ng-click="remove(obj)">
+                    clear
+                </i>
+            </td>
+        </tr>
+    </table>
+    
+    </md-card-content>
+    
+    <md-card-footer>
+    
+    <md-button class="md-raised md-primary" ng-click="makeForm()"
+    ng-disabled="!(newWave.wave.length > 0 && newWave.title.length > 0)" 
+    style="width: 100%; margin:0">
+    Create wave
+    </md-button>
+    
+    <md-progress-linear ng-if="creating" md-mode="indeterminate"></md-progress-linear>
+    
+    </md-card-footer>
+    
+    </md-card>
+    
+</div>
+
+</div>
+
+</md-tab>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<md-tab label="Matching">
+
+<div layout="row" layout-align="center" style="padding: 2rem 2rem;">
+
+<div layout="column" layout-align="center" style="width: 30rem">
+
+    <md-card style="padding: 1rem;">
+    
+    <md-input-container style="margin-bottom: 0; width: 100%">
+        <label>Google Forms</label>
+        <md-select ng-model="selectedForm" md-on-open="updateActiveForms()">
+            <md-option ng-repeat="form in activeForms" ng-value="form">
+                {{form.name + " (" + (form.dateCreated | date:'medium') + "), " + form.responseLengthString}}
+            </md-option>
+        </md-select>
+    </md-input-container>
+    
+    <br>
+    
+    <md-button style="width: 100%; margin:0" ng-disabled="!validForm()" class="md-raised md-primary" ng-click="loadSelectedForm()">
+        Load
+    </md-button>
+    
+    <md-progress-linear ng-if="loading" md-mode="indeterminate"></md-progress-linear>
+    
+    </md-card>
+    
+    <br>
+    
+    <md-card style="padding: 1rem" ng-if="formLoaded">
+
+    <table>
+        <tr>
+            <th>Game</th>
+            <th>Capacity</th>
+        </tr>
+        <tr ng-repeat="g in formGames">
+            <td style="padding: 0px 10px">
+                {{g.name}}
+            </td>
+            <td style="padding: 0px 10px">
+                <md-input-container style="padding:0; margin-bottom:0">
+                    <input ng-required="true" ng-model="g.capacity" style="width:5rem" type="number" aria-label="CapacityInput">
+                </md-input-container>
+            </td>
+        </tr>
+    </table>
+    
+    <br>
+    
+    <md-button style="width: 100%; margin:0" ng-disabled="!validCapacities() || matching" class="md-raised md-primary" ng-click="match()">
+        Match
+    </md-button>
+    
+    <md-progress-linear ng-if="matching" md-mode="indeterminate"></md-progress-linear>
+    
+    
+    
+    <div>
+    <br>
+    <form action="{{matchUrl + '#gid=0' | trusted}}" target="_blank">
+        <md-button style="padding: 0 2rem 0; width: 100%; margin:0" ng-disabled="!selectedForm.isMatched" type="submit" class="md-raised md-warn">
+            See match
+        </md-button>
+    </form>
+    </div>
+     
+    <br>
+    
+    <md-button style="width: 100%; margin:0" ng-disabled="!selectedForm.isMatched" class="md-raised md-primary" ng-click="saveMatchResults()">
+        Save Results
+    </md-button>
+    
+    </md-card>
+    
+</div>
+    
+
+</div>
+
+</md-tab>
+
+
+
+
+
+
+
+
+
+<div>
+    <form action="https://docs.google.com/forms/u/0/" target="_blank">
+        <md-button style="padding: 0 2rem 0; width: 100%; margin:0" type="submit" class="md-raised md-primary">
+            See waves
+        </md-button>
+    </form>
+</div>
+
+<div>
+    <form action="https://docs.google.com/spreadsheets/u/0/" target="_blank">
+        <md-button style="padding: 0 2rem 0; width: 100%; margin:0" type="submit" class="md-raised md-warn">
+            See matches
+        </md-button>
+    </form>
+</div>
+
+
+
+
+
+
+</md-tabs>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- Your application bootstrap  -->
+<script type="text/javascript">    
+/**
+ * You must include the dependency on 'ngMaterial' 
+ */
+var app = angular.module('app', ['ngMaterial', 'ngMessages']);
+
+var restService = function($http){
+
+    const server = "http://localhost:2000";
+    
+    var _getTeams = function(){
+        return $http.get(server + "/teams-get");
+    }
+    
+    var _matchEmployees = function(data){
+        return $http.post(server + "/match", data);
+    }
+    
+    var _saveRanks = function(data){
+        return $http.post(server + "/save-ranks", data);
+    }
+    
+    return {
+        getTeams: _getTeams,
+        matchEmployees: _matchEmployees,
+        saveRanks: _saveRanks
+    }
+}
+
+app.factory("restService", ["$http", restService]);
+
+app.filter('trusted', ['$sce', function ($sce) {
+   return $sce.trustAsResourceUrl;
+}]);
+
+var ctrl = app.controller("ctrl", function($scope, $filter, restService, $mdToast, $q){  
+        
+    $scope.date = "";
+    $scope.tax = null;
+    $scope.divisions = ["NHL", "NBA"]
+    $scope.selectedDivision = $scope.divisions[0];
+    
+    $scope.teams = [];
+    
+    $scope.newWave = {}
+    $scope.newWave.wave = [];
+    $scope.newWave.title = "";
+    
+    $scope.updateActiveForms = function(){
+        $scope.activeForms = [];
+        return $q(function(resolve, reject){
+            google.script.run.withSuccessHandler(function(forms){
+                $scope.activeForms = forms;
+                resolve();
+            }).withFailureHandler(function(err){
+                console.log(err);
+                errorMessage();
+                reject(err);
+            }).getActiveForms();
+        });
+    }
+    
+    $scope.queryTeams = function(){
+        if($scope.teams.length < 1){
+            return restService.getTeams().then(function(res){
+                $scope.teams = res.data;
+                return $scope.teams.filter(teamFilter).sort(teamSort);
+            }, function(err){
+                return [];
+            });     
+        }
+        else{
+            return $scope.teams.filter(teamFilter).sort(teamSort);
+        }
+    }
+    
+    function teamFilter(obj){
+        return obj.name.toLowerCase().includes($scope.searchText.toLowerCase()) && obj.division == $scope.selectedDivision;
+    }
+    
+    function teamSort(obj1, obj2){
+        return obj1.name.toLowerCase().indexOf($scope.searchText.toLowerCase()) - obj2.name.toLowerCase().indexOf($scope.searchText.toLowerCase());
+    }
+    
+    $scope.addEnabled = function(){
+        if (($scope.searchText != "") && ($scope.tax > 0) && $scope.date != ""){
+            return true;
+        }
+        else return false;
+    }
+        
+    $scope.addTeam = function(){ 
+     
+        var obj = {
+            "team": $scope.searchText,
+            "tax": $scope.tax,
+            "date": $filter('date')($scope.date, "yyyy-M-dd")
+        }
+        $scope.newWave.wave.push(obj);
+        resetFields();
+    }
+    
+    $scope.remove = function(element) {
+      var index = $scope.newWave.wave.indexOf(element);
+      $scope.newWave.wave.splice(index, 1);
+    }
+    
+    function resetFields(){
+        $scope.date = "";
+        $scope.tax = "";
+        $scope.searchText = "";
+    } 
+    
+    
+    $scope.makeForm = function(){
+    
+        $scope.creating = true;
+        
+        var values = $scope.newWave.wave.map(function(obj){
+            return obj.date + " (" + obj.team + ", " + $filter('currency')(obj.tax) + ")";
+        });
+        
+        google.script.run.withSuccessHandler(function(formUrl){
+        
+            $scope.formUrl = formUrl;
+            $scope.creatingSuccess = true;
+            $scope.creating = false;
+            $scope.newWave.wave = [];
+            $scope.newWave.title = "";
+            showToast("Wave created!");
+            
+        }).withFailureHandler(function(err){
+            console.log(err);
+            errorMessage();
+        }).createForm(values, $scope.newWave.title, $scope.selectedDivision);
+        
+    }
+    
+    $scope.validForm = function(){
+        if($scope.selectedForm != null) return true;
+        else return false;
+    }
+    
+    $scope.loadSelectedForm = function(){
+        $scope.loading = true;
+        $scope.matchingSuccess = false;
+        
+        google.script.run.withSuccessHandler(function(obj){
+            $scope.formGames = obj.games;
+            $scope.formResponses = obj.responses;
+            $scope.formDivision = obj.division;
+            
+            if(obj.matchUrl != ""){
+                $scope.matchUrl = obj.matchUrl;
+            }
+            
+            $scope.formLoaded = true;
+            $scope.loading = false;
+            $scope.$apply();
+        }).withFailureHandler(function(err){
+            console.log(err);
+            $scope.loading = false;
+            errorMessage();
+        }).getFormGames($scope.selectedForm);
+        
+        
+    }
+    
+    $scope.validCapacities = function(){
+        var flag = true;
+        angular.forEach($scope.formGames, function(obj) {
+            if(!(obj.capacity > 0)) flag = false;
+        })
+        return flag;
+    }
+    
+    $scope.match = function(){
+        $scope.matching = true;
+        
+        var responses = $scope.formResponses;
+        var capacities = {}
+        $scope.formGames.forEach(function(obj){
+            capacities[obj.name] = obj.capacity
+        });
+        var division = $scope.formDivision;
+        
+        var reqData = [responses, capacities, division]
+        
+        restService.matchEmployees(reqData).then(function(res){
+            
+            $scope.sol = res.data;
+            
+            google.script.run.withSuccessHandler(function(sheetUrl){
+                $scope.matchUrl = sheetUrl;
+                $scope.matching = false;
+                $scope.matchingSuccess = true;
+                $scope.selectedForm.isMatched = true;
+                $scope.$apply();
+            
+            }).withFailureHandler(function(err){
+                console.log(err);
+                $scope.matching = false;
+                $scope.matchingSuccess = false;
+                errorMessage();
+            }).createSpreadsheet($scope.selectedForm, $scope.sol)
+            
+        }, function(err){
+            console.log(err);
+            $scope.matching = false;
+            $scope.matchingSuccess = false;
+            errorMessage();
+        });
+    }
+    
+    $scope.saveMatchResults = function(){
+        
+        google.script.run.withSuccessHandler(function(ranks){
+        
+            $scope.matchResults = ranks;
+            
+            console.log(ranks);
+          
+            var reqData = {
+                "ranks": ranks,
+                "division": $scope.formDivision
+            };
+          
+            restService.saveRanks(reqData).then(function(res){
+                showToast("Updated ranks!");
+                
+            }, function(err){
+                console.log(err);
+                errorMessage();
+            });
+          
+        }).withFailureHandler(function(err){
+            console.log(err);
+            errorMessage();
+        }).loadMatchResults($scope.selectedForm);
+        
+    }
+    
+    function showToast(x){
+        $mdToast.show(
+            $mdToast.simple()
+            .textContent(x)
+            .position("top left")
+            .capsule(true)
+            .hideDelay(5000)
+            
+        );
+    }
+    
+    function errorMessage(){
+        $mdToast.show(
+            $mdToast.simple()
+            .textContent('An error occured!')
+            .position("top left")
+            .capsule(true)
+            .hideDelay(5000)
+            
+        );
+    }
+    
+    
+
+});
+
+
+</script>
+
+</body>
+</html>

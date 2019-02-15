@@ -1,8 +1,10 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # In[ ]:
 
+
+# Import the neccessary libraries
 
 from flask import Flask, json, request, jsonify
 from flask_cors import CORS
@@ -25,6 +27,7 @@ from Models import BO
 
 
 def scrape_nhl_teams():
+    # Scrape web page to get NHL team data
     teams_url = "http://www.sportslogos.net/teams/list_by_league/1/National_Hockey_League/NHL/logos/"
     res = requests.get(teams_url)
     soup = BeautifulSoup(res.text, 'html.parser')
@@ -33,6 +36,7 @@ def scrape_nhl_teams():
     return teams
 
 def scrape_nba_teams():
+    # Scrape web page to get NBA team data
     teams_url = "http://www.nba.com/teams"
     res = requests.get(teams_url)
     soup = BeautifulSoup(res.text, 'html.parser')
@@ -40,29 +44,11 @@ def scrape_nba_teams():
     teams = [{"name":team.find("a").text.strip(), "logo":team.find("img").attrs["src"], "division":"NBA"} for team in teams_div]
     return teams
 
-def insert_nhl_teams():
-    nhl_teams = scrape_nhl_teams()
-    if(len(nhl_teams) > 0):
-        Team.query.filter_by(division="NHL").delete()
-        for team in nhl_teams:
-            t = Team(team["name"], team["division"], team["logo"])
-            db.session.add(t)
-        db.session.commit()
-    return len(nhl_teams)
-
-def insert_nba_teams():
-    nba_teams = scrape_nba_teams()
-    if(len(nba_teams) > 0):
-        Team.query.filter_by(division="NBA").delete()
-        for team in nba_teams:
-            t = Team(team["name"], team["division"], team["logo"])
-            db.session.add(t)
-        db.session.commit()
-    return len(nba_teams)
-
 
 # In[ ]:
 
+
+# Set up REST API and database
 
 app = Flask(__name__)
 CORS(app)
@@ -71,11 +57,24 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'da
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
-http_server = WSGIServer(('', 2000), app)
+http_server = WSGIServer(('localhost', 2000), app)
 
+
+# There are only __two__ tables in the SQLite database:
+# 1. Team (data for NHL/NBA teams)
+# > - name (team name)
+# > - logo (url link to picture of team icon)
+# > - division (NHL/NBA)
+#             
+# 2. Prev (previous rank for each employee)
+# > - email (email of employee)
+# > - rank (rank employee got in the last matching round)
+# > - division (NHL/NBA)
 
 # In[ ]:
 
+
+# Team table schema object
 
 class Team(db.Model):
     name = db.Column(db.String(250), primary_key=True)
@@ -98,6 +97,8 @@ teams_schema = TeamSchema(many=True)
 # In[ ]:
 
 
+# Prev table schema object
+
 class Prev(db.Model):
     email = db.Column(db.String(250), primary_key=True)
     division = db.Column(db.String(20), primary_key=True)
@@ -119,18 +120,54 @@ prevs_schema = PrevSchema(many=True)
 # In[ ]:
 
 
+# Functions to insert scraped team data into the SQLite database
+
+def insert_nhl_teams():
+    # Insert NHL team data into SQLite database
+    nhl_teams = scrape_nhl_teams()
+    if(len(nhl_teams) > 0):
+        Team.query.filter_by(division="NHL").delete()
+        for team in nhl_teams:
+            t = Team(team["name"], team["division"], team["logo"])
+            db.session.add(t)
+        db.session.commit()
+    return len(nhl_teams)
+
+def insert_nba_teams():
+    # Insert NBA team data into SQLite database
+    nba_teams = scrape_nba_teams()
+    if(len(nba_teams) > 0):
+        Team.query.filter_by(division="NBA").delete()
+        for team in nba_teams:
+            t = Team(team["name"], team["division"], team["logo"])
+            db.session.add(t)
+        db.session.commit()
+    return len(nba_teams)
+
+
+# In[ ]:
+
+
+# Endpoints for the REST API
+
 @app.route("/teams-get")
 def get_teams():
+    # Return team data from database
     return jsonify(teams_schema.dump(Team.query).data)
 
 @app.route("/teams-update")
 def update_teams():
+    # Overwrite team data in the database if new teams join the NHL/NBA
+    # This is assuming: 
+    # 1. The websites update the teams on their website
+    # 2. The structure of the websites (the HTML) doesn't change
     nhl = insert_nhl_teams()
     nba = insert_nba_teams()
     return "NHL: {} updated, NBA: {} updated".format(nhl, nba)
 
 @app.route("/match", methods=["POST"])
 def run_matching():
+    # Run the matching
     req_data = request.json
     responses = req_data[0]
     ticket_capacity = req_data[1]
@@ -150,15 +187,18 @@ def run_matching():
         else:
             temp[email] = prev_table[email]
     db.session.commit()
-    prev_rankings = pd.DataFrame.from_dict(temp, orient="index")
     
-    bo = BO(data, ticket_capacity, prev_rankings)
+    # Use historical data
+    #prev_rankings = pd.DataFrame.from_dict(temp, orient="index")
+    
+    bo = BO(data, ticket_capacity, prev_rankings=None)
     bo.optimize()
     
     return jsonify(bo.sol)
 
 @app.route("/save-ranks", methods=["POST"])
 def saveRanks():
+    # Updates the ranks in the Prev table
     req_data = request.json
     ranks = req_data["ranks"]
     division = req_data["division"]
@@ -170,6 +210,7 @@ def saveRanks():
 
 @app.route("/shutdown")
 def shutdown():
+    # Shuts down the REST API
     http_server.stop()
     return "Server shutting down..."
 
@@ -177,5 +218,6 @@ def shutdown():
 # In[ ]:
 
 
+# Run the server
 http_server.serve_forever()
 
