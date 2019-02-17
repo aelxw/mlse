@@ -90,38 +90,41 @@ def ip(r_employees, ticket_capacity, c):
 
     # Objective function
     obj = cvx.Maximize(c*x)
+    
+    try:
+        # Solve
+        problem = cvx.Problem(obj, constraints)
+        problem.solve(solver=cvx.ECOS_BB, max_iters=500, mi_max_iters=100000)
 
-    # Solve
+        if problem.status == 'optimal':
+            x_star = x.value.reshape(-1,n_t).round()
+            r_m = r.where(x_star == 1)
 
-    problem = cvx.Problem(obj, constraints)
-    problem.solve(solver=cvx.ECOS_BB, max_iters=500, mi_max_iters=100000)
+            ranks = x_star.argmax(axis=1) + 1
+            ranks[(x_star.sum(axis=1) < 1)] = 0
+            solranks = dict(zip(r_m.index, ranks))
 
-    if problem.status == 'optimal':
-        x_star = x.value.reshape(-1,n_t).round()
-        r_m = r.where(x_star == 1)
-        
-        ranks = x_star.argmax(axis=1) + 1
-        ranks[(x_star.sum(axis=1) < 1)] = 0
-        solranks = dict(zip(r_m.index, ranks))
-        
-        e_choices = dict(zip(r.index, r.where(r.notnull(), "").values.tolist()))
-        
-        m_employees = {}
-        for e in r_m.index:
-            match = r_m.loc[e].dropna().tolist()
-            m_employees[e] = {
-                "match": match[0] if len(match) > 0 else "",
-                "rank": str(solranks[e]),
-                "choices": e_choices[e]
-            }
+            e_choices = dict(zip(r.index, r.where(r.notnull(), "").values.tolist()))
 
-        return m_employees, x_star
-    else:
-        print(problem.status)
-        return {}, None
+            m_employees = {}
+            for e in r_m.index:
+                match = r_m.loc[e].dropna().tolist()
+                m_employees[e] = {
+                    "match": match[0] if len(match) > 0 else "",
+                    "rank": str(solranks[e]),
+                    "choices": e_choices[e]
+                }
+
+            return m_employees, x_star
+        else:
+            print(problem.status)
+            return {}, None
+    
+    except:
+        pass
 
 
-# In[4]:
+# In[92]:
 
 
 # Class that does the Bayesian Optimization (BO) iterations
@@ -131,6 +134,7 @@ class BO():
         
         self.bestscore = 0
         self.bestc = np.array([])
+
         self.sol = {}
         self.x_star = {}
         self.solsummary = None
@@ -144,13 +148,15 @@ class BO():
         self.data = data.iloc[:, 0:3]
         
         if len(data.index) > len(data.index.drop_duplicates()):
-            raise Exception('Duplicate employee emails!')
+            temp = pd.DataFrame(data.index, columns=["id"]).assign(n=1).groupby("id").sum().reset_index()
+            dupes = ", ".join(temp.loc[temp.n > 1, ["id"]].values.flatten().tolist())
+            raise Exception('Duplicate employee emails: {}'.format(dupes))
         
         self.ticket_capacity = ticket_capacity
         
         # qi represents the employees that got bad results in the previous round
         if prev_rankings is None:
-            qi = np.zeros(len(data))
+            qi = np.ones(len(data))
             self.qi = qi
         else:
             qi = prev_rankings.iloc[:, -1].values.flatten()
@@ -230,7 +236,7 @@ class BO():
         vals = pd.Series({
             "rank1": np.ones((n,1)).T.dot(X.dot(np.eye(1,m,0).T)).ravel()[0],
             "unmatched": np.ones((n,1)).T.dot(np.ones((n,1))-X.dot(np.ones((m,1)))).ravel()[0],
-            "equity": qi.T.dot(X.dot(np.eye(1,m,2).T)+(np.ones((n,1))-X.dot(np.ones((m,1))))).ravel()[0]
+            "equity": qi.T.dot(X.dot(np.eye(1,m,2).T)+(np.ones((n,1))-X.dot(np.ones((m,1))))).ravel()[0] #qi.T.dot(X.dot(np.eye(1,m,2).T)).ravel()[0]
         }).loc[priority].values.reshape(-1,3)
         score = self.U_joint(vals, U, K)[0]
         return score, vals
@@ -280,11 +286,11 @@ class BO():
         
         def early_stop(res):
             # Stop the iterations if the current best solution comes up n times
-            n = 20
+            n = 10
             return (res.func_vals == res.fun).sum() >= n
         
         try:
-            self.gp_res = gp_minimize(self.run, dimensions, n_points=50000, callback=early_stop)
+            self.gp_res = gp_minimize(self.run, dimensions, n_points=50000, noise=1e-6, callback=early_stop)
             
         except:
             pass
@@ -299,29 +305,91 @@ class BO():
         
 
 
-# In[19]:
+# In[122]:
 
 
-#data = read_data("data1.csv")
+#data = read_data("data8.csv")
 #prev_rankings = pd.DataFrame(np.random.randint(0, 4, data.shape), index=data.index)
 #tickets = sorted(data.unstack().dropna().unique().tolist())
 #ticket_capacity = {}
 #for t in tickets:
-#    ticket_capacity[t] = 22
+#    ticket_capacity[t] = 17
 
+# 1st Leafs round
+#lm = [75, 44, 8, 0]
+#division = "NHL"
 
-# In[18]:
+# Golden State round
+#lm = [86, 76, 14, 4]
+#division = "NBA"
 
+#lm = [87, 29, 0, 0]
+#division = "NHL"
 
-#bo = BO(data, ticket_capacity)
-#bo.set_utility(equity=0, rank1=0.9, unmatched=0.1)
-#bo.optimize()
+#lm = [94, 25, 0, 0]
+#division = "NBA"
+
+#lm = [82, 0, 0, 0]
+#division = "NBA"
+
+# 3rd Leafs round
+#lm = [77, 46, 13, 6]
+#division = "NHL"
+
+# Spurs round
+#lm = [82, 35, 26, 21]
+#division = "NBA"
+
+#lm = [np.nan, np.nan, np.nan, np.nan]
+#division = "NHL"
 
 
 # In[ ]:
 
 
+#models = [
+#    [0.7, 0.5, 0.6],
+#    [0.6, 0.5, 0.7],
+#    [0.4, 0.5, 0.2],
+#    [0.2, 0.5, 0.4]
+#]
 
+#results = []
+#bos = []
+#results.append(pd.Series(lm, index=["rank1", "rank2", "rank3", "unmatched"], name="LM"))
+
+#for i, model in enumerate(models):
+#    print("Model {}".format(i+1), model)   
+#    equity, rank1, unmatched = model
+#    bo = BO(data, ticket_capacity)
+#    bo.set_utility(equity=equity, rank1=rank1, unmatched=unmatched)
+#    bo.optimize()
+#    temp = bo.x_star.sum(axis=0).tolist()
+#    temp.append(bo.solsummary.unmatched[0])
+#    results.append(pd.Series(temp, index=["rank1", "rank2", "rank3", "unmatched"], name="model{}".format(i+1)))
+#    bos.append(bo)
+
+
+# In[123]:
+
+
+#compare = pd.concat(results, axis=1)
+#ax = compare.plot(kind="bar")
+#ax.set_title("{} Model Comparison".format(division))
+#ax.set_ylabel("# employees")
+#plt.show()
+#display(compare.T)
+
+
+# In[124]:
+
+
+#l = []
+#for i, b in enumerate(bos):
+#    m = "Model{}".format(i+1)
+#    l.append(pd.DataFrame.from_dict(b.sol, orient="index").loc[:, ["match"]].rename(columns={"match":m}))
+#pred = pd.concat(l, axis=1)
+#pred.to_csv("leafs_round_recent_results.csv")
 
 
 # In[ ]:
