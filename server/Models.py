@@ -236,7 +236,7 @@ class BO():
         vals = pd.Series({
             "rank1": np.ones((n,1)).T.dot(X.dot(np.eye(1,m,0).T)).ravel()[0],
             "unmatched": np.ones((n,1)).T.dot(np.ones((n,1))-X.dot(np.ones((m,1)))).ravel()[0],
-            "equity": qi.T.dot(X.dot(np.eye(1,m,2).T)+(np.ones((n,1))-X.dot(np.ones((m,1))))).ravel()[0] #qi.T.dot(X.dot(np.eye(1,m,2).T)).ravel()[0]
+            "equity": qi.T.dot(X.dot(np.eye(1,m,2).T)+(np.ones((n,1))-X.dot(np.ones((m,1))))).ravel()[0]
         }).loc[priority].values.reshape(-1,3)
         score = self.U_joint(vals, U, K)[0]
         return score, vals
