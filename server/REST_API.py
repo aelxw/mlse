@@ -175,20 +175,21 @@ def run_matching():
     
     data = pd.DataFrame.from_dict(responses, orient="index")
     
-    prev_table = {}
-    for o in prevs_schema.dump(Prev.query.filter_by(division=division)).data:
-        prev_table[o["email"]] = o["rank"]
-    
-    temp = {}
-    for email in data.index:
-        if email not in prev_table:
-            temp[email] = 1
-            db.session.add(Prev(email, division, 1))
-        else:
-            temp[email] = prev_table[email]
-    db.session.commit()
-    
     # Use historical data
+    
+    #prev_table = {}
+    #for o in prevs_schema.dump(Prev.query.filter_by(division=division)).data:
+    #    prev_table[o["email"]] = o["rank"]
+    
+    #temp = {}
+    #for email in data.index:
+    #    if email not in prev_table:
+    #        temp[email] = 1
+    #        db.session.add(Prev(email, division, 1))
+    #    else:
+    #        temp[email] = prev_table[email]
+    #db.session.commit()
+    
     #prev_rankings = pd.DataFrame.from_dict(temp, orient="index")
     
     bo = BO(data, ticket_capacity, prev_rankings=None)
