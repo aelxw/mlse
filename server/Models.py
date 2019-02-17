@@ -20,7 +20,7 @@ filterwarnings("ignore")
 import sys
 import traceback
 
-get_ipython().run_line_magic('config', 'Completer.use_jedi = False')
+#get_ipython().run_line_magic('config', 'Completer.use_jedi = False')
 
 
 # In[2]:
