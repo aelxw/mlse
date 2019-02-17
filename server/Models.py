@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
+# In[ ]:
 
 
 # Import the neccessary libraries
@@ -20,10 +20,10 @@ filterwarnings("ignore")
 import sys
 import traceback
 
-#get_ipython().run_line_magic('config', 'Completer.use_jedi = False')
+#%config Completer.use_jedi = False
 
 
-# In[2]:
+# In[ ]:
 
 
 # This is to read raw data files that are sent to us for testing
@@ -34,7 +34,7 @@ def read_data(filename):
     return data
 
 
-# In[3]:
+# In[ ]:
 
 
 # Integer programming
@@ -124,7 +124,7 @@ def ip(r_employees, ticket_capacity, c):
         pass
 
 
-# In[92]:
+# In[ ]:
 
 
 # Class that does the Bayesian Optimization (BO) iterations
@@ -178,7 +178,7 @@ class BO():
         
         self.iter = 0
 
-    def set_utility(self, equity=0.7, rank1=0.65, unmatched=0.6):
+    def set_utility(self, equity=0.7, rank1=0.5, unmatched=0.6):
         
         # Used newton's method to solve for k
         def newton_k(x, k1, k2, k3):
@@ -305,7 +305,7 @@ class BO():
         
 
 
-# In[122]:
+# In[ ]:
 
 
 #data = read_data("data8.csv")
@@ -370,7 +370,7 @@ class BO():
 #    bos.append(bo)
 
 
-# In[123]:
+# In[ ]:
 
 
 #compare = pd.concat(results, axis=1)
@@ -381,7 +381,7 @@ class BO():
 #display(compare.T)
 
 
-# In[124]:
+# In[ ]:
 
 
 #l = []
