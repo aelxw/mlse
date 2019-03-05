@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[ ]:
+# In[1]:
 
 
 # Import the neccessary libraries
@@ -23,7 +23,7 @@ import traceback
 #%config Completer.use_jedi = False
 
 
-# In[ ]:
+# In[2]:
 
 
 # This is to read raw data files that are sent to us for testing
@@ -34,7 +34,7 @@ def read_data(filename):
     return data
 
 
-# In[ ]:
+# In[3]:
 
 
 # Integer programming
@@ -57,13 +57,13 @@ def ip(r_employees, ticket_capacity, c):
     # Variables
 
     x = cvx.Variable((r.size,1), boolean=True)
-
+    
     # Constraints
 
     # Each employee gets <= 1 ticket
     A1 = sparse.kron(sparse.eye(n_employees), np.ones(n_t))
     b1 = np.ones((A1.shape[0],1))
-
+    
     # <= ticket capacity
     rows = []
     b2 = []
@@ -84,7 +84,7 @@ def ip(r_employees, ticket_capacity, c):
     constraints = [
         A1*x <= b1,
         A2*x <= b2,
-        A3*x == b3,
+        A3*x <= b3,
         x >= 0
     ]
 
@@ -124,7 +124,7 @@ def ip(r_employees, ticket_capacity, c):
         pass
 
 
-# In[ ]:
+# In[4]:
 
 
 # Class that does the Bayesian Optimization (BO) iterations
@@ -308,7 +308,7 @@ class BO():
 # In[ ]:
 
 
-#data = read_data("data8.csv")
+#data = read_data("data9.csv")
 #prev_rankings = pd.DataFrame(np.random.randint(0, 4, data.shape), index=data.index)
 #tickets = sorted(data.unstack().dropna().unique().tolist())
 #ticket_capacity = {}
@@ -342,6 +342,15 @@ class BO():
 
 #lm = [np.nan, np.nan, np.nan, np.nan]
 #division = "NHL"
+
+#lm = [np.nan, np.nan, np.nan, np.nan]
+#division = "NBA"
+
+
+# In[ ]:
+
+
+
 
 
 # In[ ]:
@@ -389,7 +398,7 @@ class BO():
 #    m = "Model{}".format(i+1)
 #    l.append(pd.DataFrame.from_dict(b.sol, orient="index").loc[:, ["match"]].rename(columns={"match":m}))
 #pred = pd.concat(l, axis=1)
-#pred.to_csv("leafs_round_recent_results.csv")
+#pred.to_csv("raptors_round_recent_results.csv")
 
 
 # In[ ]:
