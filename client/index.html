@@ -102,15 +102,25 @@ Your HTML content here
         GO TO FORM
     </md-button>
     
-    <md-progress-linear ng-if="loading" md-mode="indeterminate"></md-progress-linear>
-    
     <br>
     
-    <md-button style="padding: 0 2rem 0; width: 100%; margin:0" ng-if="pastForm.isMatched" ng-click="openWindow(pastForm.sheetUrl + '#gid=0')" type="submit" class="md-raised md-warn">
+    <md-button style="padding: 0 2rem 0; width: 100%; margin:0" ng-if="pastForm.isMatched" ng-click="openWindow(pastForm.sheetUrl + '#gid=0')" type="submit" class="md-raised md-accent">
         See Current Match
     </md-button>
     
     </md-card>
+    
+    
+    <md-card style="padding: 1rem" ng-if="validForm(pastForm)">
+    
+    <md-button style="width: 100%; margin:0" ng-disabled="!validForm(pastForm)" class="md-raised md-warn" ng-click="confirmDelete()">
+        DELETE FORM
+    </md-button>
+    
+    </md-card>
+    
+    <div id="toastContainerDeleted" style="min-height: 4rem"></div>
+    
     
 </div>
     
@@ -183,9 +193,6 @@ Your HTML content here
                     <span md-highlight-text="searchText" md-highlight-flags="gi">{{team.name}}</span>
                 </div>
             </md-item-template>
-            <md-not-found>
-                No team found.
-            </md-not-found>
         </md-autocomplete>
         
         <br>
@@ -334,7 +341,7 @@ Your HTML content here
         Load
     </md-button>
     
-    <md-progress-linear ng-if="loading" md-mode="indeterminate"></md-progress-linear>
+    <md-progress-linear ng-if="loadingSelectedForm" md-mode="indeterminate"></md-progress-linear>
     
     </md-card>
     
@@ -369,10 +376,9 @@ Your HTML content here
     
     <br>
     
-    <md-button style="padding: 0 2rem 0; width: 100%; margin:0" ng-if="selectedForm.isMatched" ng-click="openWindow(matchUrl + '#gid=0')" type="submit" class="md-raised md-warn">
+    <md-button style="padding: 0 2rem 0; width: 100%; margin:0" ng-if="selectedForm.isMatched" ng-click="openWindow(selectedForm.sheetUrl + '#gid=0')" type="submit" class="md-raised md-accent">
         See Current Match
     </md-button>
-    
     
     <!-->
     <br>
@@ -384,6 +390,8 @@ Your HTML content here
     <!-->
     
     </md-card>
+    
+    <div id="toastContainerMatchError" style="min-height:4rem"></div>
     
 </div>
     
@@ -562,6 +570,40 @@ var ctrl = app.controller("ctrl", function($scope, $filter, restService, $mdToas
         $window.open(url, '_blank')
     }
     
+    $scope.confirmDelete = function(){
+        var deleteUser = $window.confirm('Are you absolutely sure you want to delete?');
+        
+        var waveName = $scope.pastForm.name;
+
+        if (deleteUser) {
+            google.script.run.withSuccessHandler(function(){
+                
+                $scope.pastForm = null;
+                $scope.pastForms = [];
+                
+                var autoChild = document.getElementById('autoPast').firstElementChild;
+                var autocompleteCtrl = angular.element(autoChild).scope().$mdAutocompleteCtrl;
+                if(autocompleteCtrl.scope.searchText){
+                    //autocompleteCtrl.clear();
+                }
+                autoChild.getElementsByTagName("input")[0].value = "";
+                
+                var text =  waveName + " deleted!"
+                var position = "top left"
+                var elementId = "toastContainerDeleted"
+                var delay = 10000
+                toastElement(text, position, elementId, delay);
+                
+            }).withFailureHandler(function(err){
+                console.log(err);
+                errorMessage();
+                reject(err);
+            }).deleteWave($scope.pastForm);
+            
+
+        }
+    }
+    
     
     $scope.queryTeams = function(){
         if($scope.teams.length < 1){
@@ -650,7 +692,7 @@ var ctrl = app.controller("ctrl", function($scope, $filter, restService, $mdToas
     }
     
     $scope.loadSelectedForm = function(){
-        $scope.loading = true;
+        $scope.loadingSelectedForm = true;
         $scope.matchingSuccess = false;
         
         google.script.run.withSuccessHandler(function(obj){
@@ -658,16 +700,12 @@ var ctrl = app.controller("ctrl", function($scope, $filter, restService, $mdToas
             $scope.formResponses = obj.responses;
             $scope.formDivision = obj.division;
             
-            if(obj.matchUrl != ""){
-                $scope.matchUrl = obj.matchUrl;
-            }
-            
             $scope.formLoaded = true;
-            $scope.loading = false;
+            $scope.loadingSelectedForm = false;
             $scope.$apply();
         }).withFailureHandler(function(err){
             console.log(err);
-            $scope.loading = false;
+            $scope.loadingSelectedForm = false;
             errorMessage();
         }).getFormGames($scope.selectedForm);
         
@@ -685,6 +723,12 @@ var ctrl = app.controller("ctrl", function($scope, $filter, restService, $mdToas
     $scope.match = function(){
         $scope.matching = true;
         
+        // Error message information
+        var errorText = "An ERROR occurred with the matching!"
+        var errorPosition = "top left"
+        var errorElementId = "toastContainerMatchError"
+        var errorDelay = 20000
+        
         var responses = $scope.formResponses;
         var capacities = {}
         $scope.formGames.forEach(function(obj){
@@ -699,24 +743,24 @@ var ctrl = app.controller("ctrl", function($scope, $filter, restService, $mdToas
             $scope.sol = res.data;
             
             google.script.run.withSuccessHandler(function(sheetUrl){
-                $scope.matchUrl = sheetUrl;
                 $scope.matching = false;
                 $scope.matchingSuccess = true;
                 $scope.selectedForm.isMatched = true;
+                $scope.selectedForm.sheetUrl = sheetUrl
                 $scope.$apply();
             
             }).withFailureHandler(function(err){
                 console.log(err);
                 $scope.matching = false;
                 $scope.matchingSuccess = false;
-                errorMessage();
+                toastElement(errorText, errorPosition, errorElementId, errorDelay);
             }).createSpreadsheet($scope.selectedForm, $scope.sol)
             
         }, function(err){
             console.log(err);
             $scope.matching = false;
             $scope.matchingSuccess = false;
-            errorMessage();
+            toastElement(errorText, errorPosition, errorElementId, errorDelay);
         });
     }
     

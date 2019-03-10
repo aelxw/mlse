@@ -218,4 +218,23 @@ function loadMatchResults(selectedForm){
 }
 
 
+function deleteFile(id){
+  DriveApp.getFileById(id).setTrashed(true);
+}
+
+function deleteWave(pastForm){
+  
+  // Delete matching sheet if it exists
+  if(pastForm.sheetUrl != ""){
+    deleteFile(SpreadsheetApp.openByUrl(pastForm.sheetUrl).getId());
+  }
+  
+  // Delete form
+  deleteFile(pastForm.id);
+
+}
+
+
+
+
 
