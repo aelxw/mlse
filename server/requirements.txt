@@ -1,3 +1,4 @@
+numpy==1.15.4
 cvxpy==1.0.14
 Flask_SQLAlchemy==2.3.2
 Flask_Cors==3.0.7
@@ -9,5 +10,4 @@ pandas==0.23.4
 flask_marshmallow==0.9.0
 Flask==1.0.2
 requests==2.21.0
-numpy==1.15.4
 beautifulsoup4==4.7.1
