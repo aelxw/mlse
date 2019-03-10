@@ -514,7 +514,7 @@ var ctrl = app.controller("ctrl", function($scope, $filter, restService, $mdToas
         if(autocompleteCtrl.scope.searchText){
             autocompleteCtrl.clear();
         }
-        autocompleteCtrl.focus();
+        autoChild.getElementsByTagName("input")[0].focus();
     }
     
     
@@ -554,7 +554,7 @@ var ctrl = app.controller("ctrl", function($scope, $filter, restService, $mdToas
         if(autocompleteCtrl.scope.searchText){
             autocompleteCtrl.clear();
         }
-        autocompleteCtrl.focus();
+        autoChild.getElementsByTagName("input")[0].focus();
     }
     
     
