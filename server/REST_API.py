@@ -204,8 +204,11 @@ def saveRanks():
     ranks = req_data["ranks"]
     division = req_data["division"]
     for email in ranks:
-        p = Prev.query.get((email, division))
-        p.rank = int(ranks[email])
+        try:
+            p = Prev.query.get((email, division))
+            p.rank = int(ranks[email])
+        except:
+            pass
     db.session.commit()
     return "Updated"
 

@@ -2,6 +2,8 @@ function doGet() {
   return HtmlService.createHtmlOutputFromFile('index');
 }
 
+var DIVISIONS = ["NBA", "NHL"];
+
 function createForm(games, title, division){
   
   // Creates the Google Form
@@ -72,7 +74,7 @@ function getFormGames(formObj){
 }
 
 
-function getActiveForms(){
+function getPastForms(){
   
   // Return all the active Google Forms
   
@@ -89,15 +91,25 @@ function getActiveForms(){
     else{
         responseLengthString = responseLength + " response";
     }
-    if(responseLength > 0){
+    if(true){
       
       var isMatched = false;
+      var sheetUrl = "";
       try{
-        form.getDestinationId();
+        var id = form.getDestinationId();
+        sheetUrl = DriveApp.getFileById(id).getUrl();
         isMatched = true;
       }
       catch(err){
         isMatched = false;
+      }
+      
+      var division = ""
+      try{
+        division = form.getItems(FormApp.ItemType.SECTION_HEADER)[0].asSectionHeaderItem().getTitle();
+      }
+      catch(err){
+        
       }
       
       var temp = {
@@ -105,13 +117,22 @@ function getActiveForms(){
         "name": file.getName(),
         "dateCreated": file.getDateCreated().getTime(),
         "responseLengthString": responseLengthString,
-        "isMatched": isMatched
+        "isMatched": isMatched,
+        "division": division,
+        "url": file.getUrl(),
+        "status": form.isAcceptingResponses() ? "OPEN" : "CLOSED",
+        "sheetUrl": sheetUrl
       }
-      l.push(temp);
+      
+      if (DIVISIONS.indexOf(division) >= 0) {
+        l.push(temp);
+      }
+
     }
   }
   return l;
 }
+
 
 function createSpreadsheet(selectedForm, matches){
   

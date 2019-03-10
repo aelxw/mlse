@@ -22,6 +22,11 @@
     color: red;
 }
 
+.hover-opacity:hover {
+    opacity: 0.5;
+    cursor: pointer;
+}
+
 md-tab-data{
   position: relative;
 }
@@ -44,7 +49,96 @@ Your HTML content here
 
 
 
-<md-tab label="New wave">
+
+
+
+
+
+
+<md-tab label="VIEW PAST WAVES">
+
+<div layout="row" layout-align="center" style="padding: 2rem 2rem;">
+
+<div layout="column" layout-align="center" style="width: 30rem">
+
+    <md-card style="padding: 1rem;">
+    
+    <md-card-header>
+    <p>
+    <span style="font-size: 1.5em">Please select a wave to view.</span>
+    <br><br>
+    <span style="font-size: 0.875em; font-weight:bold">Click the refresh button to update the wave information.</span>
+    </p>
+    </md-card-header>
+    
+    <div style="display:inline-block">
+    <md-autocomplete
+        id="autoPast"
+        md-selected-item="pastForm"
+        md-search-text="searchTextPastForm"
+        md-no-cache="true"
+        md-items="form in updatePastForms()"
+        md-item-text="form.name"
+        md-min-length="0"
+        placeholder="Enter Wave Name"
+        md-autoselect=true
+        style="display:inline-block; width:85%">
+            <md-item-template>
+                <div layout="row">
+                    <span md-highlight-text="searchTextPastForm" md-highlight-flags="gi">
+                        {{form.name + " (" + (form.dateCreated | date:'mediumDate') + "), " + form.division + ", " +  form.responseLengthString + ", " + form.status}}
+                    </span>
+                </div>
+            </md-item-template>
+    </md-autocomplete>
+    <md-button class="md-icon-button" style="display:inline-block" ng-click="refreshPastForms()">
+        <i class="material-icons">refresh</i>
+    </md-button>
+    </div>
+    
+    <br>
+    
+    <md-button style="width: 100%; margin:0" ng-disabled="!validForm(pastForm)" class="md-raised md-primary" ng-click="openWindow(pastForm.url)">
+        GO TO FORM
+    </md-button>
+    
+    <md-progress-linear ng-if="loading" md-mode="indeterminate"></md-progress-linear>
+    
+    <br>
+    
+    <md-button style="padding: 0 2rem 0; width: 100%; margin:0" ng-if="pastForm.isMatched" ng-click="openWindow(pastForm.sheetUrl + '#gid=0')" type="submit" class="md-raised md-warn">
+        See Current Match
+    </md-button>
+    
+    </md-card>
+    
+</div>
+    
+
+</div>
+
+</md-tab>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<md-tab label="CREATE NEW WAVE">
 
 <div layout="row" layout-align="center" style="padding: 2rem 2rem;">
 
@@ -53,7 +147,7 @@ Your HTML content here
     <md-card style="padding: 1rem;">
     
         <md-card-title>
-            <md-input-container style="margin-bottom: 0;">
+            <md-input-container style="margin-bottom: 0;" ng-disabled="newWave.wave.length > 0">
                 <label>Enter Wave Name</label>
                 <input ng-required="true" ng-model="newWave.title">
             </md-input-container>
@@ -81,7 +175,7 @@ Your HTML content here
             md-items="team in queryTeams()"
             md-item-text="team.name"
             md-min-length="0"
-            placeholder="Enter team name"
+            placeholder="Enter Team Name"
             md-autoselect=true>
             <md-item-template>
                 <div layout="row">
@@ -97,11 +191,11 @@ Your HTML content here
         <br>
         
         <md-input-container style="margin-bottom: 0; padding-right: 1rem">
-            <md-datepicker ng-model="date" md-placeholder="Enter date" md-open-on-focus></md-datepicker>
+            <md-datepicker ng-model="date" md-placeholder="Enter Date" md-min-date="today" md-open-on-focus></md-datepicker>
         </md-input-container>
         
         <md-input-container style="margin-bottom: 0;">
-            <label>Taxable benefit</label>
+            <label>Taxable Benefit</label>
             <input ng-required="true" ng-model="tax" type="number">
         </md-input-container>
         
@@ -116,15 +210,6 @@ Your HTML content here
             Add
         </md-button>
         
-        <br><br>
-        
-        <div ng-if="creatingSuccess && newWave.wave.length == 0">
-        <form action="{{formUrl | trusted}}" target="_blank">
-            <md-button style="padding: 0 2rem 0; width: 100%; margin:0" type="submit" class="md-raised md-primary">
-                See Wave
-            </md-button>
-        </form>
-        </div>
         
         </md-card-footer>
             
@@ -132,6 +217,7 @@ Your HTML content here
     
     <br>
     
+    <div id="toastContainerSuccess" style="min-height: 4rem">
     
     <md-card style="padding: 1rem" ng-if="newWave.wave.length > 0">
     
@@ -173,6 +259,8 @@ Your HTML content here
     
     </md-card>
     
+    </div>
+    
 </div>
 
 </div>
@@ -192,7 +280,12 @@ Your HTML content here
 
 
 
-<md-tab label="Matching">
+
+
+
+
+
+<md-tab label="CONDUCT MATCHING">
 
 <div layout="row" layout-align="center" style="padding: 2rem 2rem;">
 
@@ -200,18 +293,44 @@ Your HTML content here
 
     <md-card style="padding: 1rem;">
     
-    <md-input-container style="margin-bottom: 0; width: 100%">
-        <label>Google Forms</label>
-        <md-select ng-model="selectedForm" md-on-open="updateActiveForms()">
-            <md-option ng-repeat="form in activeForms" ng-value="form">
-                {{form.name + " (" + (form.dateCreated | date:'medium') + "), " + form.responseLengthString}}
-            </md-option>
-        </md-select>
-    </md-input-container>
+    <md-card-header>
+    <p>
+    <span style="font-size: 1.5em">Please select a wave for matching.</span>
+    <br><br>
+    <span style="font-size: 0.875em; font-weight:bold">Note: Matching is only possible for waves that have been closed.</span>
+    <br><br>
+    <span style="font-size: 0.875em; font-weight:bold">Click the refresh button to update the wave information.</span>
+    </p>
+    </md-card-header>
+    
+    <div style="display:inline-block">
+    <md-autocomplete
+        id="autoClosed"
+        md-selected-item="selectedForm"
+        md-search-text="searchTextSelectedForm"
+        md-no-cache="true"
+        md-items="form in updateClosedForms()"
+        md-item-text="form.name"
+        md-min-length="0"
+        placeholder="Enter Wave Name"
+        md-autoselect=true
+        style="display:inline-block; width:85%">
+            <md-item-template>
+                <div layout="row">
+                    <span md-highlight-text="searchTextSelectedForm" md-highlight-flags="gi">
+                        {{form.name + " (" + (form.dateCreated | date:'mediumDate') + "), " + form.division + ", " +  form.responseLengthString + ", " + form.status}}
+                    </span>
+                </div>
+            </md-item-template>
+    </md-autocomplete>
+    <md-button class="md-icon-button" style="display:inline-block" ng-click="refreshClosedForms()">
+        <i class="material-icons">refresh</i>
+    </md-button>
+    </div>
     
     <br>
     
-    <md-button style="width: 100%; margin:0" ng-disabled="!validForm()" class="md-raised md-primary" ng-click="loadSelectedForm()">
+    <md-button style="width: 100%; margin:0" ng-disabled="!validForm(selectedForm)" class="md-raised md-primary" ng-click="loadSelectedForm()">
         Load
     </md-button>
     
@@ -221,7 +340,7 @@ Your HTML content here
     
     <br>
     
-    <md-card style="padding: 1rem" ng-if="formLoaded">
+    <md-card style="padding: 1rem" ng-if="formLoaded && validForm(selectedForm)">
 
     <table>
         <tr>
@@ -248,22 +367,21 @@ Your HTML content here
     
     <md-progress-linear ng-if="matching" md-mode="indeterminate"></md-progress-linear>
     
-    
-    
-    <div>
     <br>
-    <form action="{{matchUrl + '#gid=0' | trusted}}" target="_blank">
-        <md-button style="padding: 0 2rem 0; width: 100%; margin:0" ng-disabled="!selectedForm.isMatched" type="submit" class="md-raised md-warn">
-            See match
-        </md-button>
-    </form>
-    </div>
-     
+    
+    <md-button style="padding: 0 2rem 0; width: 100%; margin:0" ng-if="selectedForm.isMatched" ng-click="openWindow(matchUrl + '#gid=0')" type="submit" class="md-raised md-warn">
+        See Current Match
+    </md-button>
+    
+    
+    <!-->
     <br>
     
     <md-button style="width: 100%; margin:0" ng-disabled="!selectedForm.isMatched" class="md-raised md-primary" ng-click="saveMatchResults()">
         Save Results
     </md-button>
+    
+    <!-->
     
     </md-card>
     
@@ -282,21 +400,8 @@ Your HTML content here
 
 
 
-<div>
-    <form action="https://docs.google.com/forms/u/0/" target="_blank">
-        <md-button style="padding: 0 2rem 0; width: 100%; margin:0" type="submit" class="md-raised md-primary">
-            See waves
-        </md-button>
-    </form>
-</div>
 
-<div>
-    <form action="https://docs.google.com/spreadsheets/u/0/" target="_blank">
-        <md-button style="padding: 0 2rem 0; width: 100%; margin:0" type="submit" class="md-raised md-warn">
-            See matches
-        </md-button>
-    </form>
-</div>
+
 
 
 
@@ -355,7 +460,7 @@ app.filter('trusted', ['$sce', function ($sce) {
    return $sce.trustAsResourceUrl;
 }]);
 
-var ctrl = app.controller("ctrl", function($scope, $filter, restService, $mdToast, $q){  
+var ctrl = app.controller("ctrl", function($scope, $filter, restService, $mdToast, $q, $window, $timeout){
         
     $scope.date = "";
     $scope.tax = null;
@@ -363,24 +468,100 @@ var ctrl = app.controller("ctrl", function($scope, $filter, restService, $mdToas
     $scope.selectedDivision = $scope.divisions[0];
     
     $scope.teams = [];
+    $scope.pastForms = [];
     
     $scope.newWave = {}
     $scope.newWave.wave = [];
     $scope.newWave.title = "";
     
-    $scope.updateActiveForms = function(){
-        $scope.activeForms = [];
-        return $q(function(resolve, reject){
-            google.script.run.withSuccessHandler(function(forms){
-                $scope.activeForms = forms;
-                resolve();
-            }).withFailureHandler(function(err){
-                console.log(err);
-                errorMessage();
-                reject(err);
-            }).getActiveForms();
-        });
+    $scope.today = new Date();
+    
+    $scope.updateClosedForms = function(){
+        $scope.selectedForm = null;
+        $scope.formLoaded = false;
+        if($scope.pastForms.length > 0){
+            return $scope.pastForms.filter(closedFormFilter).sort(closedFormSort);
+        }
+        else{
+            return $q(function(resolve, reject){
+                google.script.run.withSuccessHandler(function(forms){
+                    $scope.pastForms = forms;
+                    resolve(forms.filter(closedFormFilter).sort(closedFormSort));
+                }).withFailureHandler(function(err){
+                    console.log(err);
+                    errorMessage();
+                    reject(err);
+                }).getPastForms();
+            });           
+        }
+
     }
+    
+
+    function closedFormFilter(obj){
+        return obj.name.toLowerCase().includes($scope.searchTextSelectedForm.toLowerCase()) && obj.status == "CLOSED";
+    }
+    
+    function closedFormSort(obj1, obj2){
+        // Descending
+        return (obj1.dateCreated <= obj2.dateCreated) ? 1 : -1
+    }
+    
+    $scope.refreshClosedForms = function(){
+        $scope.pastForms = [];
+        var autoChild = document.getElementById('autoClosed').firstElementChild;
+        var autocompleteCtrl = angular.element(autoChild).scope().$mdAutocompleteCtrl;
+        if(autocompleteCtrl.scope.searchText){
+            autocompleteCtrl.clear();
+        }
+        autocompleteCtrl.focus();
+    }
+    
+    
+    $scope.updatePastForms = function(){
+        $scope.pastForm = null;
+        if($scope.pastForms.length > 0){
+            return $scope.pastForms.filter(pastFormFilter).sort(pastFormSort);
+        }
+        else{
+            return $q(function(resolve, reject){
+                google.script.run.withSuccessHandler(function(forms){
+                    $scope.pastForms = forms;
+                    resolve(forms.filter(pastFormFilter).sort(pastFormSort));
+                }).withFailureHandler(function(err){
+                    console.log(err);
+                    errorMessage();
+                    reject(err);
+                }).getPastForms();
+            });            
+        }
+
+    }
+    
+    function pastFormFilter(obj){
+        return obj.name.toLowerCase().includes($scope.searchTextPastForm.toLowerCase());
+    }
+    
+    function pastFormSort(obj1, obj2){
+        // Descending
+        return (obj1.dateCreated <= obj2.dateCreated) ? 1 : -1
+    }
+    
+    $scope.refreshPastForms = function(){
+        $scope.pastForms = [];
+        var autoChild = document.getElementById('autoPast').firstElementChild;
+        var autocompleteCtrl = angular.element(autoChild).scope().$mdAutocompleteCtrl;
+        if(autocompleteCtrl.scope.searchText){
+            autocompleteCtrl.clear();
+        }
+        autocompleteCtrl.focus();
+    }
+    
+    
+    $scope.openWindow = function(url){
+        $window.open(url, '_blank')
+    }
+    
     
     $scope.queryTeams = function(){
         if($scope.teams.length < 1){
@@ -405,7 +586,7 @@ var ctrl = app.controller("ctrl", function($scope, $filter, restService, $mdToas
     }
     
     $scope.addEnabled = function(){
-        if (($scope.searchText != "") && ($scope.tax > 0) && $scope.date != ""){
+        if (($scope.searchText != "") && ($scope.tax >= 0) && $scope.date != ""){
             return true;
         }
         else return false;
@@ -416,7 +597,7 @@ var ctrl = app.controller("ctrl", function($scope, $filter, restService, $mdToas
         var obj = {
             "team": $scope.searchText,
             "tax": $scope.tax,
-            "date": $filter('date')($scope.date, "yyyy-M-dd")
+            "date": $filter('date')($scope.date, "yyyy-MM-dd")
         }
         $scope.newWave.wave.push(obj);
         resetFields();
@@ -442,14 +623,19 @@ var ctrl = app.controller("ctrl", function($scope, $filter, restService, $mdToas
             return obj.date + " (" + obj.team + ", " + $filter('currency')(obj.tax) + ")";
         });
         
-        google.script.run.withSuccessHandler(function(formUrl){
-        
-            $scope.formUrl = formUrl;
-            $scope.creatingSuccess = true;
+        google.script.run.withSuccessHandler(function(){
+            
+            var text = $scope.newWave.title + " created! Go to the VIEW PAST WAVES tab to see the form."
+            var position = "top left"
+            var elementId = "toastContainerSuccess"
+            var delay = 20000
+            toastElement(text, position, elementId, delay);
+            
             $scope.creating = false;
             $scope.newWave.wave = [];
             $scope.newWave.title = "";
-            showToast("Wave created!");
+            
+            $scope.pastForms = [];
             
         }).withFailureHandler(function(err){
             console.log(err);
@@ -458,8 +644,8 @@ var ctrl = app.controller("ctrl", function($scope, $filter, restService, $mdToas
         
     }
     
-    $scope.validForm = function(){
-        if($scope.selectedForm != null) return true;
+    $scope.validForm = function(form){
+        if(form != null) return true;
         else return false;
     }
     
@@ -491,7 +677,7 @@ var ctrl = app.controller("ctrl", function($scope, $filter, restService, $mdToas
     $scope.validCapacities = function(){
         var flag = true;
         angular.forEach($scope.formGames, function(obj) {
-            if(!(obj.capacity > 0)) flag = false;
+            if(!(obj.capacity >= 0)) flag = false;
         })
         return flag;
     }
@@ -570,6 +756,17 @@ var ctrl = app.controller("ctrl", function($scope, $filter, restService, $mdToas
             .capsule(true)
             .hideDelay(5000)
             
+        );
+    }
+    
+    function toastElement(text, position, elementId, delay){
+        $mdToast.show(
+            $mdToast.simple()
+            .textContent(text)
+            .position(position)
+            .capsule(true)
+            .hideDelay(delay)
+            .parent(document.getElementById(elementId))
         );
     }
     
