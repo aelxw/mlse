@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
+# In[ ]:
 
 
 # Import the neccessary libraries
@@ -23,18 +23,7 @@ import traceback
 #%config Completer.use_jedi = False
 
 
-# In[2]:
-
-
-# This is to read raw data files that are sent to us for testing
-def read_data(filename):
-    data = pd.read_csv(filename, names=["id", "r1", "r2", "r3"])
-    data.id = data.id.apply(lambda x: "e"+str(x))
-    data = data.set_index("id")
-    return data
-
-
-# In[3]:
+# In[ ]:
 
 
 # Integer programming
@@ -124,7 +113,7 @@ def ip(r_employees, ticket_capacity, c):
         pass
 
 
-# In[4]:
+# In[ ]:
 
 
 # Class that does the Bayesian Optimization (BO) iterations
@@ -139,6 +128,8 @@ class BO():
         self.x_star = {}
         self.solsummary = None
         self.history = []
+        
+        self.prev_rankings = prev_rankings
         
         # In case data is passed without 3 columns (1 column for each rank)
         missing = 3-data.shape[1]
@@ -159,7 +150,7 @@ class BO():
             qi = np.ones(len(data))
             self.qi = qi
         else:
-            qi = prev_rankings.iloc[:, -1].values.flatten()
+            qi = self.data.join(self.prev_rankings, how="left").iloc[:, -1].fillna(1).values.flatten()
             self.qi = np.array(((qi == 0) | (qi == 3)), dtype=np.float64)
         
         # Uses the default K values specified in the function
@@ -179,6 +170,11 @@ class BO():
         self.iter = 0
 
     def set_utility(self, equity=0.7, rank1=0.5, unmatched=0.6):
+        
+        # Model 1: [0.7, 0.5, 0.6]
+        # Model 2: [0.6, 0.5, 0.7]
+        # Model 3: [0.4, 0.5, 0.2]
+        # Model 4: [0.2, 0.5, 0.4]
         
         # Used newton's method to solve for k
         def newton_k(x, k1, k2, k3):
@@ -308,97 +304,102 @@ class BO():
 # In[ ]:
 
 
-#data = read_data("data9.csv")
+# Misc functions for project
+
+def read_data(filename):
+    temp = pd.read_csv(filename, header=None).iloc[:, 0:4]
+    temp.columns = ["id", "r1", "r2", "r3"]
+    temp = temp.set_index("id")
+    return temp
+
+def make_ticket_capacity(data, cap):
+    tickets = sorted(data.unstack().dropna().unique().tolist())
+    ticket_capacity = {}
+    for t in tickets:
+        ticket_capacity[t] = cap
+    return ticket_capacity
+
+def evaluate_solution(x_star, data, prev_rankings, name):
+    rank1, rank2, rank3 = x_star.sum(axis=0)
+    unmatched = x_star.shape[0] - rank1 - rank2 - rank3
+    prev_rank = data.join(prev_rankings)["rank"].fillna(1)
+    prev_angry = np.array((prev_rank == 0) | (prev_rank == 3), dtype=np.int64)
+    new_angry = np.array((x_star[:, 2] > 0) | (x_star.sum(axis=1) == 0), dtype=np.int64)
+    unlucky = prev_angry.dot(new_angry)
+    return pd.Series({
+        "rank1": rank1,
+        "rank2": rank2,
+        "rank3": rank3,
+        "unmatched": unmatched,
+        "unlucky": unlucky
+    }, name=name)
+
+def compare(data, cap, prev_rankings, admin_file, title="Performance Comparison"):
+    
+    ticket_capacity = make_ticket_capacity(data, cap)
+    
+    bo_proposed = BO(data, ticket_capacity, prev_rankings)
+    bo_requested = BO(data, ticket_capacity, prev_rankings=None)
+
+    bo_requested.optimize()
+    bo_proposed.optimize()
+
+    admin_x_star = np.array(read_data(admin_file).notnull(), dtype=np.int64)
+
+    solutions = [
+        evaluate_solution(admin_x_star, data, prev_rankings, "Admin"),
+        evaluate_solution(bo_requested.x_star, data, prev_rankings, "Requested"),
+        evaluate_solution(bo_proposed.x_star, data, prev_rankings, "Proposed")
+    ]
+
+    res = pd.DataFrame(solutions)
+    
+    ax = res.T.plot(kind="bar", color=["blue", "green", "purple"])
+    plt.title(title)
+    plt.ylabel("# of employees")
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.3),
+              fancybox=True, shadow=True, ncol=5)
+    plt.show()
+    
+    display(res)
+
+
+# In[ ]:
+
+
+# Make comparison graphs
+
+#prev_rankings = pd.DataFrame(data=np.random.randint(0, 4, 1000), index=range(0,1000), columns=["rank"])
+
+# Typical case
+#nhl_data = read_data("data/NHL3_all.csv")
+#admin_file = "prev_rankings/NHL3.csv"
+#title = "Performance Comparison (Typical)"
+#compare(nhl_data, 17, prev_rankings, admin_file, title)
+
+# High-demand case
+#nba_data = read_data("data/NBA4_all.csv")
+#admin_file = "prev_rankings/NBA4.csv"
+#title = "Performance Comparison (High-demand)"
+#compare(nba_data, 22, prev_rankings, admin_file, title)
+
+
+# In[ ]:
+
+
+# Test max employee capacity
+#data = read_data("data/max_employees.csv")
 #prev_rankings = pd.DataFrame(np.random.randint(0, 4, data.shape), index=data.index)
 #tickets = sorted(data.unstack().dropna().unique().tolist())
-#ticket_capacity = {}
-#for t in tickets:
-#    ticket_capacity[t] = 17
-
-# 1st Leafs round
-#lm = [75, 44, 8, 0]
-#division = "NHL"
-
-# Golden State round
-#lm = [86, 76, 14, 4]
-#division = "NBA"
-
-#lm = [87, 29, 0, 0]
-#division = "NHL"
-
-#lm = [94, 25, 0, 0]
-#division = "NBA"
-
-#lm = [82, 0, 0, 0]
-#division = "NBA"
-
-# 3rd Leafs round
-#lm = [77, 46, 13, 6]
-#division = "NHL"
-
-# Spurs round
-#lm = [82, 35, 26, 21]
-#division = "NBA"
-
-#lm = [np.nan, np.nan, np.nan, np.nan]
-#division = "NHL"
-
-#lm = [np.nan, np.nan, np.nan, np.nan]
-#division = "NBA"
+#ticket_capacity make_ticket_capacity(data, 400)
+#bo = BO(data, ticket_capacity, prev_rankings)
+#bo.optimize()
 
 
 # In[ ]:
 
 
 
-
-
-# In[ ]:
-
-
-#models = [
-#    [0.7, 0.5, 0.6],
-#    [0.6, 0.5, 0.7],
-#    [0.4, 0.5, 0.2],
-#    [0.2, 0.5, 0.4]
-#]
-
-#results = []
-#bos = []
-#results.append(pd.Series(lm, index=["rank1", "rank2", "rank3", "unmatched"], name="LM"))
-
-#for i, model in enumerate(models):
-#    print("Model {}".format(i+1), model)   
-#    equity, rank1, unmatched = model
-#    bo = BO(data, ticket_capacity)
-#    bo.set_utility(equity=equity, rank1=rank1, unmatched=unmatched)
-#    bo.optimize()
-#    temp = bo.x_star.sum(axis=0).tolist()
-#    temp.append(bo.solsummary.unmatched[0])
-#    results.append(pd.Series(temp, index=["rank1", "rank2", "rank3", "unmatched"], name="model{}".format(i+1)))
-#    bos.append(bo)
-
-
-# In[ ]:
-
-
-#compare = pd.concat(results, axis=1)
-#ax = compare.plot(kind="bar")
-#ax.set_title("{} Model Comparison".format(division))
-#ax.set_ylabel("# employees")
-#plt.show()
-#display(compare.T)
-
-
-# In[ ]:
-
-
-#l = []
-#for i, b in enumerate(bos):
-#    m = "Model{}".format(i+1)
-#    l.append(pd.DataFrame.from_dict(b.sol, orient="index").loc[:, ["match"]].rename(columns={"match":m}))
-#pred = pd.concat(l, axis=1)
-#pred.to_csv("raptors_round_recent_results.csv")
 
 
 # In[ ]:
