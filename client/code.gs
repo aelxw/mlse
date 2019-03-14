@@ -9,23 +9,47 @@ function createForm(games, title, division){
   // Creates the Google Form
   
   var form = FormApp.create(title);
-  form.setDescription("Select your preferred games.")
+  
+  var team = "";
+  if (division == "NHL"){
+    team = "Leafs";
+  }
+  if (division == "NBA"){
+    team = "Raptors"
+  }
+  
+  var description = "Your name has been drawn to receive two tickets to one of the following " + team + " games. Here is the list of games with their associated costs:\n\n";
+  
+  games.forEach(function(x){
+    description += x+"\n"
+  });
+  
+  description += "\nPlease list your preferred games below.\n\n"
+  description += "By submitting this form, you acknowledge that you MUST ACCEPT tickets to any of your listed preferences and that you CANNOT decline the tickets once received."
+  
+  form.setDescription(description)
   
   form.addSectionHeaderItem().setTitle(division);
   
-  var r1 = form.addMultipleChoiceItem()
+  form.addListItem()
   .setTitle("Which game is your 1st choice?")
+  .setChoiceValues(games)
+  .setRequired(true);
+  
+  form.addListItem()
+  .setTitle("Which game is your 2nd choice? (Optional)")
   .setChoiceValues(games);
   
-  var r2 = form.addMultipleChoiceItem()
-  .setTitle("Which game is your 2nd choice?")
+  form.addListItem()
+  .setTitle("Which game is your 3rd choice? (Optional)")
   .setChoiceValues(games);
   
-  var r3 = form.addMultipleChoiceItem()
-  .setTitle("Which game is your 3rd choice?")
-  .setChoiceValues(games);
+  form.addParagraphTextItem()
+  .setTitle("Any additional comments? (Optional)");
   
-  r1.setRequired(true);
+  form.addCheckboxItem()
+  .setTitle("I acknowledge that I MUST ACCEPT tickets to any of the games that I have submitted.")
+  .setRequired(true);
   
   form.setCollectEmail(true);
   
@@ -51,7 +75,7 @@ function getFormGames(formObj){
   
   var division = form.getItems(FormApp.ItemType.SECTION_HEADER)[0].asSectionHeaderItem().getTitle();
   
-  form.getItems(FormApp.ItemType.MULTIPLE_CHOICE)[0].asMultipleChoiceItem().getChoices().forEach(function(choice){
+  form.getItems(FormApp.ItemType.LIST)[0].asListItem().getChoices().forEach(function(choice){
     games.push({"name":choice.getValue()});
   });
   
@@ -59,18 +83,25 @@ function getFormGames(formObj){
   
   var formResponses = form.getResponses();
   for (var i = 0; i < formResponses.length; i++) {
+    
     var formResponse = formResponses[i];
     var itemResponses = formResponse.getItemResponses();
+    
     var email = formResponse.getRespondentEmail();
     responses[email] = {}
+    
     for (var j = 0; j < itemResponses.length; j++) {
-      var itemResponse = itemResponses[j].getResponse();
-      responses[email][j] = itemResponse;
+      var itemResponse = itemResponses[j]
+      if (itemResponse.getItem().getType() == FormApp.ItemType.LIST){
+        responses[email][j] = itemResponse.getResponse(); 
+      }
     }
   }
   
   return {"games":games, "responses":responses, "division":division, "matchUrl":matchUrl};
-
+  
+  
+  
 }
 
 

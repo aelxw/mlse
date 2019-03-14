@@ -304,7 +304,7 @@ Your HTML content here
     <p>
     <span style="font-size: 1.5em">Please select a wave for matching.</span>
     <br><br>
-    <span style="font-size: 0.875em; font-weight:bold">Note: Matching is only possible for waves that have been closed.</span>
+    <span style="font-size: 0.875em; font-weight:bold">Note: Matching is only possible for waves that have been CLOSED.</span>
     <br><br>
     <span style="font-size: 0.875em; font-weight:bold">Click the refresh button to update the wave information.</span>
     </p>
@@ -325,7 +325,7 @@ Your HTML content here
             <md-item-template>
                 <div layout="row">
                     <span md-highlight-text="searchTextSelectedForm" md-highlight-flags="gi">
-                        {{form.name + " (" + (form.dateCreated | date:'mediumDate') + "), " + form.division + ", " +  form.responseLengthString + ", " + form.status}}
+                        {{form.name + " (" + (form.dateCreated | date:'mediumDate') + "), " + form.division + ", " +  form.responseLengthString}}
                     </span>
                 </div>
             </md-item-template>
@@ -696,13 +696,30 @@ var ctrl = app.controller("ctrl", function($scope, $filter, restService, $mdToas
         $scope.matchingSuccess = false;
         
         google.script.run.withSuccessHandler(function(obj){
+            console.log(obj);
             $scope.formGames = obj.games;
             $scope.formResponses = obj.responses;
             $scope.formDivision = obj.division;
             
             $scope.formLoaded = true;
             $scope.loadingSelectedForm = false;
+            
+            
+            var defaultCapacity = 0
+            if(obj.division == "NHL"){
+                defaultCapacity = 17;
+            }
+            
+            if(obj.division == "NBA"){
+                defaultCapacity = 22;
+            }
+            
+            angular.forEach($scope.formGames, function(obj){
+                obj.capacity = defaultCapacity
+            });
+            
             $scope.$apply();
+            
         }).withFailureHandler(function(err){
             console.log(err);
             $scope.loadingSelectedForm = false;
