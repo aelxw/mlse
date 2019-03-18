@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[ ]:
+# In[1]:
 
 
 # Import the neccessary libraries
@@ -23,7 +23,7 @@ import traceback
 #%config Completer.use_jedi = False
 
 
-# In[ ]:
+# In[2]:
 
 
 # Integer programming
@@ -113,7 +113,7 @@ def ip(r_employees, ticket_capacity, c):
         pass
 
 
-# In[ ]:
+# In[3]:
 
 
 # Class that does the Bayesian Optimization (BO) iterations
@@ -301,7 +301,7 @@ class BO():
         
 
 
-# In[ ]:
+# In[55]:
 
 
 # Misc functions for project
@@ -322,7 +322,7 @@ def make_ticket_capacity(data, cap):
 def evaluate_solution(x_star, data, prev_rankings, name):
     rank1, rank2, rank3 = x_star.sum(axis=0)
     unmatched = x_star.shape[0] - rank1 - rank2 - rank3
-    prev_rank = data.join(prev_rankings)["rank"].fillna(1)
+    prev_rank = data.join(prev_rankings).iloc[:, -1].fillna(1)
     prev_angry = np.array((prev_rank == 0) | (prev_rank == 3), dtype=np.int64)
     new_angry = np.array((x_star[:, 2] > 0) | (x_star.sum(axis=1) == 0), dtype=np.int64)
     unlucky = prev_angry.dot(new_angry)
@@ -364,7 +364,7 @@ def compare(data, cap, prev_rankings, admin_file, title="Performance Comparison"
     display(res)
 
 
-# In[ ]:
+# In[5]:
 
 
 # Make comparison graphs
@@ -384,16 +384,52 @@ def compare(data, cap, prev_rankings, admin_file, title="Performance Comparison"
 #compare(nba_data, 22, prev_rankings, admin_file, title)
 
 
-# In[ ]:
+# In[6]:
 
 
 # Test max employee capacity
 #data = read_data("data/max_employees.csv")
 #prev_rankings = pd.DataFrame(np.random.randint(0, 4, data.shape), index=data.index)
 #tickets = sorted(data.unstack().dropna().unique().tolist())
-#ticket_capacity make_ticket_capacity(data, 400)
+#ticket_capacity = make_ticket_capacity(data, 400)
 #bo = BO(data, ticket_capacity, prev_rankings)
 #bo.optimize()
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
 
 
 # In[ ]:

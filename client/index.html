@@ -67,7 +67,7 @@ Your HTML content here
     <p>
     <span style="font-size: 1.5em">Please select a wave to view.</span>
     <br><br>
-    <span style="font-size: 0.875em; font-weight:bold">Click the refresh button to update the wave information.</span>
+    <span style="font-size: 0.875em;">Click the refresh button to update the wave information.</span>
     </p>
     </md-card-header>
     
@@ -113,7 +113,7 @@ Your HTML content here
     
     <md-card style="padding: 1rem" ng-if="validForm(pastForm)">
     
-    <md-button style="width: 100%; margin:0" ng-disabled="!validForm(pastForm)" class="md-raised md-warn" ng-click="confirmDelete()">
+    <md-button style="width: 100%; margin:0" ng-disabled="!validForm(pastForm) || isDeleting" class="md-raised md-warn" ng-click="confirmDelete()">
         DELETE FORM
     </md-button>
     
@@ -306,7 +306,7 @@ Your HTML content here
     <br><br>
     <span style="font-size: 0.875em; font-weight:bold">Note: Matching is only possible for waves that have been CLOSED.</span>
     <br><br>
-    <span style="font-size: 0.875em; font-weight:bold">Click the refresh button to update the wave information.</span>
+    <span style="font-size: 0.875em;">Click the refresh button to update the wave information.</span>
     </p>
     </md-card-header>
     
@@ -571,15 +571,19 @@ var ctrl = app.controller("ctrl", function($scope, $filter, restService, $mdToas
     }
     
     $scope.confirmDelete = function(){
-        var deleteUser = $window.confirm('Are you absolutely sure you want to delete?');
+    
+        $scope.isDeleting = true;
+    
+        var deleteWave = $window.confirm('Are you absolutely sure you want to delete?');
         
         var waveName = $scope.pastForm.name;
 
-        if (deleteUser) {
+        if (deleteWave) {
             google.script.run.withSuccessHandler(function(){
                 
                 $scope.pastForm = null;
                 $scope.pastForms = [];
+                $scope.isDeleting = false;
                 
                 var autoChild = document.getElementById('autoPast').firstElementChild;
                 var autocompleteCtrl = angular.element(autoChild).scope().$mdAutocompleteCtrl;
